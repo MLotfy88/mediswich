@@ -17,6 +17,7 @@ interface FilterPanelProps {
 export default function FilterPanel({ onFilterChange }: FilterPanelProps) {
   const [country, setCountry] = useState<string | null>("all");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 200]);
+  const [availability, setAvailability] = useState<string | null>("all");
   
   // Update parent component with filter changes
   useEffect(() => {
@@ -25,13 +26,14 @@ export default function FilterPanel({ onFilterChange }: FilterPanelProps) {
       priceRange: {
         min: priceRange[0],
         max: priceRange[1]
-      }
+      },
+      availability
     });
-  }, [country, priceRange, onFilterChange]);
+  }, [country, priceRange, availability, onFilterChange]);
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-border animate-fade-in">
-      <h3 className="text-lg font-medium mb-4 text-pharma-primary">تصفية النتائج</h3>
+      <h3 className="text-lg font-medium mb-4 text-pharma-primary" dir="rtl">تصفية النتائج</h3>
       
       <div className="space-y-6">
         {/* Country Filter */}
@@ -48,6 +50,24 @@ export default function FilterPanel({ onFilterChange }: FilterPanelProps) {
               <SelectItem value="all">كل الدول</SelectItem>
               <SelectItem value="egyptian">مصر فقط</SelectItem>
               <SelectItem value="international">دولي فقط</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        {/* Availability Filter */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700 block" dir="rtl">حالة التوفر</label>
+          <Select
+            value={availability || "all"}
+            onValueChange={(value) => setAvailability(value)}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="جميع الأدوية" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">جميع الأدوية</SelectItem>
+              <SelectItem value="available">متوفرة فقط</SelectItem>
+              <SelectItem value="unavailable">غير متوفرة فقط</SelectItem>
             </SelectContent>
           </Select>
         </div>

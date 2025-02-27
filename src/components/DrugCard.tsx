@@ -2,7 +2,7 @@
 import { Drug } from "@/types";
 import { calculateSavings } from "@/services/drugService";
 import { Separator } from "@/components/ui/separator";
-import { Flag } from "lucide-react";
+import { Flag, CheckCircle, XCircle } from "lucide-react";
 
 interface DrugCardProps {
   drug: Drug;
@@ -42,8 +42,21 @@ export default function DrugCard({ drug, showAlternatives = true }: DrugCardProp
           <span className="text-sm text-gray-600">البلد: {drug.country}</span>
         </div>
         
-        <div className="mt-2" dir="rtl">
+        <div className="mt-2 flex justify-between items-center" dir="rtl">
           <span className="text-lg font-medium text-pharma-primary">{drug.price} جنيه</span>
+          <span className={`flex items-center text-sm ${drug.isAvailable ? "text-pharma-save" : "text-red-500"}`}>
+            {drug.isAvailable ? (
+              <>
+                <CheckCircle size={16} className="ml-1" />
+                <span>متوفر</span>
+              </>
+            ) : (
+              <>
+                <XCircle size={16} className="ml-1" />
+                <span>غير متوفر</span>
+              </>
+            )}
+          </span>
         </div>
       </div>
       
@@ -72,6 +85,9 @@ export default function DrugCard({ drug, showAlternatives = true }: DrugCardProp
                   <div className="mt-1 flex justify-between text-xs text-gray-500">
                     <span>الشركة: {alt.company}</span>
                     <span>البلد: {alt.country}</span>
+                    <span className={alt.isAvailable ? "text-pharma-save" : "text-red-500"}>
+                      {alt.isAvailable ? "متوفر" : "غير متوفر"}
+                    </span>
                   </div>
                 </div>
               ))}

@@ -9,12 +9,14 @@ interface SearchResultsProps {
   results: Drug[];
   filterOptions: FilterOptions;
   searchQuery: string;
+  isVisible: boolean;
 }
 
 export default function SearchResults({ 
   results, 
   filterOptions, 
-  searchQuery 
+  searchQuery,
+  isVisible
 }: SearchResultsProps) {
   const [filteredResults, setFilteredResults] = useState<Drug[]>(results);
   
@@ -24,10 +26,16 @@ export default function SearchResults({
       filterDrugs(
         results, 
         filterOptions.country, 
-        filterOptions.priceRange
+        filterOptions.priceRange,
+        filterOptions.availability
       )
     );
   }, [results, filterOptions]);
+
+  // If results are hidden (not visible), return null
+  if (!isVisible) {
+    return null;
+  }
 
   if (results.length === 0) {
     return searchQuery ? <NoResults query={searchQuery} /> : null;

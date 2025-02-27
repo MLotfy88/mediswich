@@ -6,6 +6,7 @@ export interface Alternative {
   price: number;
   country: string;
   isEgyptian: boolean;
+  isAvailable: boolean;
 }
 
 export interface Drug {
@@ -15,6 +16,7 @@ export interface Drug {
   price: number;
   country: string;
   isEgyptian: boolean;
+  isAvailable: boolean;
   alternatives: Alternative[];
 }
 
@@ -24,4 +26,10 @@ export interface FilterOptions {
     min: number | null;
     max: number | null;
   };
+  availability?: string | null;
+}
+
+export interface AppLanguage {
+  code: 'ar' | 'en';
+  direction: 'rtl' | 'ltr';
 }

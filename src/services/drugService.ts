@@ -10,6 +10,7 @@ const mockDrugs: Drug[] = [
     price: 10,
     country: "مصر",
     isEgyptian: true,
+    isAvailable: true,
     alternatives: [
       {
         id: "2",
@@ -18,6 +19,7 @@ const mockDrugs: Drug[] = [
         price: 25,
         country: "المملكة المتحدة",
         isEgyptian: false,
+        isAvailable: true,
       },
       {
         id: "3",
@@ -26,6 +28,7 @@ const mockDrugs: Drug[] = [
         price: 8,
         country: "مصر",
         isEgyptian: true,
+        isAvailable: false,
       },
     ],
   },
@@ -36,6 +39,7 @@ const mockDrugs: Drug[] = [
     price: 15,
     country: "مصر",
     isEgyptian: true,
+    isAvailable: true,
     alternatives: [
       {
         id: "5",
@@ -44,6 +48,7 @@ const mockDrugs: Drug[] = [
         price: 60,
         country: "الولايات المتحدة",
         isEgyptian: false,
+        isAvailable: true,
       },
       {
         id: "6",
@@ -52,6 +57,7 @@ const mockDrugs: Drug[] = [
         price: 20,
         country: "مصر",
         isEgyptian: true,
+        isAvailable: true,
       },
     ],
   },
@@ -62,6 +68,7 @@ const mockDrugs: Drug[] = [
     price: 50,
     country: "الولايات المتحدة",
     isEgyptian: false,
+    isAvailable: true,
     alternatives: [
       {
         id: "8",
@@ -70,6 +77,7 @@ const mockDrugs: Drug[] = [
         price: 45,
         country: "المملكة المتحدة",
         isEgyptian: false,
+        isAvailable: false,
       },
       {
         id: "9",
@@ -78,6 +86,7 @@ const mockDrugs: Drug[] = [
         price: 25,
         country: "مصر",
         isEgyptian: true,
+        isAvailable: true,
       },
     ],
   },
@@ -88,6 +97,7 @@ const mockDrugs: Drug[] = [
     price: 12,
     country: "مصر",
     isEgyptian: true,
+    isAvailable: true,
     alternatives: [
       {
         id: "11",
@@ -96,6 +106,7 @@ const mockDrugs: Drug[] = [
         price: 80,
         country: "المملكة المتحدة",
         isEgyptian: false,
+        isAvailable: true,
       },
       {
         id: "12",
@@ -104,6 +115,7 @@ const mockDrugs: Drug[] = [
         price: 120,
         country: "السويد",
         isEgyptian: false,
+        isAvailable: true,
       },
     ],
   },
@@ -114,6 +126,7 @@ const mockDrugs: Drug[] = [
     price: 35,
     country: "مصر",
     isEgyptian: true,
+    isAvailable: false,
     alternatives: [
       {
         id: "14",
@@ -122,6 +135,7 @@ const mockDrugs: Drug[] = [
         price: 150,
         country: "الدنمارك",
         isEgyptian: false,
+        isAvailable: true,
       },
       {
         id: "15",
@@ -130,6 +144,7 @@ const mockDrugs: Drug[] = [
         price: 30,
         country: "مصر",
         isEgyptian: true,
+        isAvailable: true,
       },
     ],
   },
@@ -140,6 +155,7 @@ const mockDrugs: Drug[] = [
     price: 25,
     country: "مصر",
     isEgyptian: true,
+    isAvailable: true,
     alternatives: [
       {
         id: "17",
@@ -148,6 +164,7 @@ const mockDrugs: Drug[] = [
         price: 120,
         country: "الولايات المتحدة",
         isEgyptian: false,
+        isAvailable: true,
       },
       {
         id: "18",
@@ -156,6 +173,7 @@ const mockDrugs: Drug[] = [
         price: 20,
         country: "مصر",
         isEgyptian: true,
+        isAvailable: false,
       },
     ],
   },
@@ -166,6 +184,7 @@ const mockDrugs: Drug[] = [
     price: 15,
     country: "مصر",
     isEgyptian: true,
+    isAvailable: true,
     alternatives: [
       {
         id: "20",
@@ -174,6 +193,7 @@ const mockDrugs: Drug[] = [
         price: 40,
         country: "فرنسا",
         isEgyptian: false,
+        isAvailable: true,
       },
       {
         id: "21",
@@ -182,6 +202,7 @@ const mockDrugs: Drug[] = [
         price: 18,
         country: "مصر",
         isEgyptian: true,
+        isAvailable: true,
       },
     ],
   },
@@ -192,6 +213,7 @@ const mockDrugs: Drug[] = [
     price: 8,
     country: "مصر",
     isEgyptian: true,
+    isAvailable: true,
     alternatives: [
       {
         id: "23",
@@ -200,6 +222,7 @@ const mockDrugs: Drug[] = [
         price: 35,
         country: "الولايات المتحدة",
         isEgyptian: false,
+        isAvailable: true,
       },
       {
         id: "24",
@@ -208,6 +231,7 @@ const mockDrugs: Drug[] = [
         price: 10,
         country: "مصر",
         isEgyptian: true,
+        isAvailable: true,
       },
     ],
   },
@@ -218,6 +242,7 @@ const mockDrugs: Drug[] = [
     price: 20,
     country: "مصر",
     isEgyptian: true,
+    isAvailable: true,
     alternatives: [
       {
         id: "26",
@@ -226,6 +251,7 @@ const mockDrugs: Drug[] = [
         price: 80,
         country: "الولايات المتحدة",
         isEgyptian: false,
+        isAvailable: false,
       },
       {
         id: "27",
@@ -234,6 +260,7 @@ const mockDrugs: Drug[] = [
         price: 18,
         country: "مصر",
         isEgyptian: true,
+        isAvailable: true,
       },
     ],
   },
@@ -244,6 +271,7 @@ const mockDrugs: Drug[] = [
     price: 75,
     country: "الولايات المتحدة",
     isEgyptian: false,
+    isAvailable: true,
     alternatives: [
       {
         id: "29",
@@ -252,6 +280,7 @@ const mockDrugs: Drug[] = [
         price: 80,
         country: "الولايات المتحدة",
         isEgyptian: false,
+        isAvailable: true,
       },
       {
         id: "30",
@@ -260,6 +289,7 @@ const mockDrugs: Drug[] = [
         price: 40,
         country: "مصر",
         isEgyptian: true,
+        isAvailable: true,
       },
     ],
   },
@@ -271,6 +301,7 @@ const mockDrugs: Drug[] = [
     price: 15,
     country: "سويسرا",
     isEgyptian: false,
+    isAvailable: true,
     alternatives: [
       {
         id: "32",
@@ -279,6 +310,7 @@ const mockDrugs: Drug[] = [
         price: 25,
         country: "سويسرا",
         isEgyptian: false,
+        isAvailable: true,
       },
       {
         id: "33",
@@ -287,6 +319,7 @@ const mockDrugs: Drug[] = [
         price: 12,
         country: "مصر",
         isEgyptian: true,
+        isAvailable: false,
       },
     ],
   },
@@ -297,6 +330,7 @@ const mockDrugs: Drug[] = [
     price: 90,
     country: "الولايات المتحدة",
     isEgyptian: false,
+    isAvailable: true,
     alternatives: [
       {
         id: "35",
@@ -305,6 +339,7 @@ const mockDrugs: Drug[] = [
         price: 120,
         country: "الولايات المتحدة",
         isEgyptian: false,
+        isAvailable: false,
       },
       {
         id: "36",
@@ -313,6 +348,7 @@ const mockDrugs: Drug[] = [
         price: 35,
         country: "مصر",
         isEgyptian: true,
+        isAvailable: true,
       },
     ],
   },
@@ -323,6 +359,7 @@ const mockDrugs: Drug[] = [
     price: 45,
     country: "ألمانيا",
     isEgyptian: false,
+    isAvailable: true,
     alternatives: [
       {
         id: "38",
@@ -331,6 +368,7 @@ const mockDrugs: Drug[] = [
         price: 65,
         country: "الولايات المتحدة",
         isEgyptian: false,
+        isAvailable: true,
       },
       {
         id: "39",
@@ -339,6 +377,7 @@ const mockDrugs: Drug[] = [
         price: 30,
         country: "مصر",
         isEgyptian: true,
+        isAvailable: true,
       },
     ],
   },
@@ -349,6 +388,7 @@ const mockDrugs: Drug[] = [
     price: 60,
     country: "ألمانيا",
     isEgyptian: false,
+    isAvailable: false,
     alternatives: [
       {
         id: "41",
@@ -357,6 +397,7 @@ const mockDrugs: Drug[] = [
         price: 80,
         country: "ألمانيا",
         isEgyptian: false,
+        isAvailable: false,
       },
       {
         id: "42",
@@ -365,6 +406,7 @@ const mockDrugs: Drug[] = [
         price: 25,
         country: "مصر",
         isEgyptian: true,
+        isAvailable: true,
       },
     ],
   },
@@ -375,6 +417,7 @@ const mockDrugs: Drug[] = [
     price: 85,
     country: "الولايات المتحدة",
     isEgyptian: false,
+    isAvailable: true,
     alternatives: [
       {
         id: "44",
@@ -383,6 +426,7 @@ const mockDrugs: Drug[] = [
         price: 95,
         country: "الولايات المتحدة",
         isEgyptian: false,
+        isAvailable: true,
       },
       {
         id: "45",
@@ -391,6 +435,7 @@ const mockDrugs: Drug[] = [
         price: 30,
         country: "مصر",
         isEgyptian: true,
+        isAvailable: true,
       },
     ],
   },
@@ -401,6 +446,7 @@ const mockDrugs: Drug[] = [
     price: 35,
     country: "الولايات المتحدة",
     isEgyptian: false,
+    isAvailable: false,
     alternatives: [
       {
         id: "47",
@@ -409,6 +455,7 @@ const mockDrugs: Drug[] = [
         price: 50,
         country: "الولايات المتحدة",
         isEgyptian: false,
+        isAvailable: true,
       },
       {
         id: "48",
@@ -417,6 +464,7 @@ const mockDrugs: Drug[] = [
         price: 20,
         country: "مصر",
         isEgyptian: true,
+        isAvailable: true,
       },
     ],
   },
@@ -427,6 +475,7 @@ const mockDrugs: Drug[] = [
     price: 30,
     country: "بلجيكا",
     isEgyptian: false,
+    isAvailable: true,
     alternatives: [
       {
         id: "50",
@@ -435,6 +484,7 @@ const mockDrugs: Drug[] = [
         price: 45,
         country: "بلجيكا",
         isEgyptian: false,
+        isAvailable: true,
       },
       {
         id: "51",
@@ -443,6 +493,7 @@ const mockDrugs: Drug[] = [
         price: 15,
         country: "مصر",
         isEgyptian: true,
+        isAvailable: true,
       },
     ],
   },
@@ -453,6 +504,7 @@ const mockDrugs: Drug[] = [
     price: 8,
     country: "المملكة المتحدة",
     isEgyptian: false,
+    isAvailable: true,
     alternatives: [
       {
         id: "53",
@@ -461,6 +513,7 @@ const mockDrugs: Drug[] = [
         price: 12,
         country: "المملكة المتحدة",
         isEgyptian: false,
+        isAvailable: false,
       },
       {
         id: "54",
@@ -469,6 +522,7 @@ const mockDrugs: Drug[] = [
         price: 5,
         country: "مصر",
         isEgyptian: true,
+        isAvailable: true,
       },
     ],
   },
@@ -479,6 +533,7 @@ const mockDrugs: Drug[] = [
     price: 18,
     country: "المملكة المتحدة",
     isEgyptian: false,
+    isAvailable: true,
     alternatives: [
       {
         id: "56",
@@ -487,6 +542,7 @@ const mockDrugs: Drug[] = [
         price: 25,
         country: "الولايات المتحدة",
         isEgyptian: false,
+        isAvailable: true,
       },
       {
         id: "57",
@@ -495,6 +551,7 @@ const mockDrugs: Drug[] = [
         price: 10,
         country: "مصر",
         isEgyptian: true,
+        isAvailable: true,
       },
     ],
   },
@@ -505,6 +562,7 @@ const mockDrugs: Drug[] = [
     price: 40,
     country: "المملكة المتحدة",
     isEgyptian: false,
+    isAvailable: false,
     alternatives: [
       {
         id: "59",
@@ -513,6 +571,7 @@ const mockDrugs: Drug[] = [
         price: 55,
         country: "المملكة المتحدة",
         isEgyptian: false,
+        isAvailable: false,
       },
       {
         id: "60",
@@ -521,6 +580,298 @@ const mockDrugs: Drug[] = [
         price: 22,
         country: "مصر",
         isEgyptian: true,
+        isAvailable: true,
+      },
+    ],
+  },
+  // أدوية إضافية عالمية ومصرية
+  {
+    id: "61",
+    name: "ديمرا 4mg",
+    company: "سانوفي",
+    price: 110,
+    country: "فرنسا",
+    isEgyptian: false,
+    isAvailable: true,
+    alternatives: [
+      {
+        id: "62",
+        name: "ميثالورا",
+        company: "ايبيكو",
+        price: 45,
+        country: "مصر",
+        isEgyptian: true,
+        isAvailable: true,
+      },
+      {
+        id: "63",
+        name: "لوراميث",
+        company: "سيجما",
+        price: 40,
+        country: "مصر",
+        isEgyptian: true,
+        isAvailable: false,
+      },
+    ],
+  },
+  {
+    id: "64",
+    name: "إنسولين لانتوس",
+    company: "سانوفي",
+    price: 350,
+    country: "فرنسا",
+    isEgyptian: false,
+    isAvailable: true,
+    alternatives: [
+      {
+        id: "65",
+        name: "توجيو",
+        company: "سانوفي",
+        price: 380,
+        country: "فرنسا",
+        isEgyptian: false,
+        isAvailable: false,
+      },
+      {
+        id: "66",
+        name: "باسل إنسولين",
+        company: "سيدكو",
+        price: 180,
+        country: "مصر",
+        isEgyptian: true,
+        isAvailable: true,
+      },
+    ],
+  },
+  {
+    id: "67",
+    name: "ليفيترا 20mg",
+    company: "باير",
+    price: 120,
+    country: "ألمانيا",
+    isEgyptian: false,
+    isAvailable: true,
+    alternatives: [
+      {
+        id: "68",
+        name: "فياجرا",
+        company: "فايزر",
+        price: 110,
+        country: "الولايات المتحدة",
+        isEgyptian: false,
+        isAvailable: true,
+      },
+      {
+        id: "69",
+        name: "سيلدينافيل",
+        company: "الحكمة",
+        price: 40,
+        country: "مصر",
+        isEgyptian: true,
+        isAvailable: true,
+      },
+    ],
+  },
+  {
+    id: "70",
+    name: "كونكور 5mg",
+    company: "ميرك",
+    price: 95,
+    country: "ألمانيا",
+    isEgyptian: false,
+    isAvailable: true,
+    alternatives: [
+      {
+        id: "71",
+        name: "بيسوكور",
+        company: "إيبيكو",
+        price: 35,
+        country: "مصر",
+        isEgyptian: true,
+        isAvailable: true,
+      },
+      {
+        id: "72",
+        name: "بيسوبرولول",
+        company: "فاركو",
+        price: 30,
+        country: "مصر",
+        isEgyptian: true,
+        isAvailable: false,
+      },
+    ],
+  },
+  {
+    id: "73",
+    name: "زوكسان 50mg",
+    company: "روش",
+    price: 850,
+    country: "سويسرا",
+    isEgyptian: false,
+    isAvailable: false,
+    alternatives: [
+      {
+        id: "74",
+        name: "ريتوكسان",
+        company: "نوفارتس",
+        price: 800,
+        country: "سويسرا",
+        isEgyptian: false,
+        isAvailable: true,
+      },
+      {
+        id: "75",
+        name: "زوكسيماب",
+        company: "المصرية للأدوية الحيوية",
+        price: 450,
+        country: "مصر",
+        isEgyptian: true,
+        isAvailable: true,
+      },
+    ],
+  },
+  {
+    id: "76",
+    name: "دوفاستون 10mg",
+    company: "أبوت",
+    price: 60,
+    country: "الولايات المتحدة",
+    isEgyptian: false,
+    isAvailable: true,
+    alternatives: [
+      {
+        id: "77",
+        name: "ديدروجيستيرون",
+        company: "أمون",
+        price: 25,
+        country: "مصر",
+        isEgyptian: true,
+        isAvailable: true,
+      },
+      {
+        id: "78",
+        name: "يوتروجستان",
+        company: "بيزينس",
+        price: 45,
+        country: "فرنسا",
+        isEgyptian: false,
+        isAvailable: false,
+      },
+    ],
+  },
+  {
+    id: "79",
+    name: "انتينال",
+    company: "اكتلاب",
+    price: 18,
+    country: "مصر",
+    isEgyptian: true,
+    isAvailable: true,
+    alternatives: [
+      {
+        id: "80",
+        name: "ايميدول",
+        company: "مينافارم",
+        price: 15,
+        country: "مصر",
+        isEgyptian: true,
+        isAvailable: true,
+      },
+      {
+        id: "81",
+        name: "لوبراميد",
+        company: "جانسن",
+        price: 35,
+        country: "بلجيكا",
+        isEgyptian: false,
+        isAvailable: false,
+      },
+    ],
+  },
+  {
+    id: "82",
+    name: "Xanax 0.5mg",
+    company: "Pfizer",
+    price: 120,
+    country: "الولايات المتحدة",
+    isEgyptian: false,
+    isAvailable: true,
+    alternatives: [
+      {
+        id: "83",
+        name: "كازوليكس",
+        company: "جلوبال ناپي",
+        price: 40,
+        country: "مصر",
+        isEgyptian: true,
+        isAvailable: true,
+      },
+      {
+        id: "84",
+        name: "ألبرازولام",
+        company: "العربية",
+        price: 35,
+        country: "مصر",
+        isEgyptian: true,
+        isAvailable: true,
+      },
+    ],
+  },
+  {
+    id: "85",
+    name: "Augmentin 1g",
+    company: "GSK",
+    price: 95,
+    country: "المملكة المتحدة",
+    isEgyptian: false,
+    isAvailable: true,
+    alternatives: [
+      {
+        id: "86",
+        name: "ميجاموكس",
+        company: "فاركو",
+        price: 45,
+        country: "مصر",
+        isEgyptian: true,
+        isAvailable: true,
+      },
+      {
+        id: "87",
+        name: "كلافوكسين",
+        company: "العامرية",
+        price: 40,
+        country: "مصر",
+        isEgyptian: true,
+        isAvailable: false,
+      },
+    ],
+  },
+  {
+    id: "88",
+    name: "Nexium 40mg",
+    company: "AstraZeneca",
+    price: 180,
+    country: "السويد",
+    isEgyptian: false,
+    isAvailable: true,
+    alternatives: [
+      {
+        id: "89",
+        name: "إيزوميبرازول",
+        company: "الحكمة",
+        price: 60,
+        country: "مصر",
+        isEgyptian: true,
+        isAvailable: true,
+      },
+      {
+        id: "90",
+        name: "إزوبرال",
+        company: "إيبيكو",
+        price: 55,
+        country: "مصر",
+        isEgyptian: true,
+        isAvailable: true,
       },
     ],
   },
@@ -555,7 +906,14 @@ export const searchDrugs = (query: string): Drug[] => {
     "cetirizine": "سيتيريزين",
     "chlorpheniramine": "كلورفينيرامين",
     "ibuprofen": "إيبوبروفين",
-    "ranitidine": "رانيتيدين"
+    "ranitidine": "رانيتيدين",
+    "dimra": "ديمرا",
+    "insulin": "إنسولين",
+    "levitra": "ليفيترا",
+    "concor": "كونكور",
+    "xanax": "زاناكس",
+    "augmentin": "أوجمنتين",
+    "nexium": "نيكسيوم"
   };
   
   // Bidirectional mapping
@@ -604,7 +962,12 @@ export const searchDrugs = (query: string): Drug[] => {
     "أدفيل": "إيبوبروفين",
     "بروفين": "إيبوبروفين",
     "زانتاك": "رانيتيدين",
-    "رانتيدول": "رانيتيدين"
+    "رانتيدول": "رانيتيدين",
+    "ديمرا": "glimipiride",
+    "لانتوس": "insulin glargine",
+    "كونكور": "bisoprolol",
+    "ليفيترا": "vardenafil",
+    "زاناكس": "alprazolam"
   };
   
   const results = mockDrugs.filter(drug => {
@@ -655,7 +1018,8 @@ export const calculateSavings = (drug: Drug): number => {
 export const filterDrugs = (
   drugs: Drug[], 
   countryFilter: string | null, 
-  priceRange: { min: number | null; max: number | null }
+  priceRange: { min: number | null; max: number | null },
+  availabilityFilter: string | null
 ): Drug[] => {
   return drugs.filter(drug => {
     // Country filter
@@ -673,6 +1037,14 @@ export const filterDrugs = (
       return false;
     }
     if (priceRange.max !== null && drug.price > priceRange.max) {
+      return false;
+    }
+    
+    // Availability filter
+    if (availabilityFilter === "available" && !drug.isAvailable) {
+      return false;
+    }
+    if (availabilityFilter === "unavailable" && drug.isAvailable) {
       return false;
     }
     

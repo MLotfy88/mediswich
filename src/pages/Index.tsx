@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Drug, FilterOptions } from "@/types";
+import { Drug, FilterOptions, AppLanguage } from "@/types";
 import { searchDrugs, getAllDrugs } from "@/services/drugService";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
@@ -18,10 +18,13 @@ const Index = () => {
     priceRange: {
       min: null,
       max: null
-    }
+    },
+    availability: null
   });
   const [isSearching, setIsSearching] = useState(false);
   const [featuredDrugs, setFeaturedDrugs] = useState<Drug[]>([]);
+  const [appLanguage, setAppLanguage] = useState<AppLanguage>({ code: 'ar', direction: 'rtl' });
+  const [resultsVisible, setResultsVisible] = useState(false);
   const { toast } = useToast();
 
   // Load some featured drugs on initial load
@@ -38,6 +41,9 @@ const Index = () => {
   const handleSearch = (query: string) => {
     setIsSearching(true);
     setSearchQuery(query);
+    
+    // Ensure results section will be visible
+    setResultsVisible(true);
     
     // Simulate loading delay
     setTimeout(() => {
@@ -61,9 +67,20 @@ const Index = () => {
     }, 500);
   };
 
+  const handleLanguageChange = (language: AppLanguage) => {
+    setAppLanguage(language);
+    document.documentElement.dir = language.direction;
+    
+    // You would typically load translations here if using a translation library
+    toast({
+      title: language.code === 'ar' ? "تم تغيير اللغة" : "Language Changed",
+      description: language.code === 'ar' ? "تم التبديل إلى اللغة العربية" : "Switched to English language",
+    });
+  };
+
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
+    <div className="min-h-screen flex flex-col" dir={appLanguage.direction}>
+      <Header onLanguageChange={handleLanguageChange} />
       
       <main className="flex-grow">
         <Hero />
@@ -75,19 +92,24 @@ const Index = () => {
                 className="text-3xl font-bold text-pharma-primary mb-4"
                 dir="rtl"
               >
-                ابحث عن دوائك الآن
+                {appLanguage.code === 'ar' ? 'ابحث عن دوائك الآن' : 'Search for your medication now'}
               </h2>
               <p 
                 className="text-gray-600"
                 dir="rtl"
               >
-                أدخل اسم الدواء للبحث عن البدائل المتاحة وأسعارها في السوق المصري والعالمي
+                {appLanguage.code === 'ar' 
+                  ? 'أدخل اسم الدواء للبحث عن البدائل المتاحة وأسعارها في السوق المصري والعالمي' 
+                  : 'Enter medication name to search for available alternatives and prices in Egyptian and global markets'}
               </p>
             </div>
             
-            <SearchBar onSearch={handleSearch} />
+            <SearchBar 
+              onSearch={handleSearch} 
+              placeholder={appLanguage.code === 'ar' ? 'ابحث عن دواء...' : 'Search for medication...'}
+            />
             
-            {(searchResults.length > 0 || searchQuery) && (
+            {(resultsVisible || searchQuery) && (
               <div className="mt-12 grid grid-cols-1 lg:grid-cols-4 gap-8">
                 <div className="lg:col-span-1">
                   <FilterPanel onFilterChange={setFilterOptions} />
@@ -103,6 +125,7 @@ const Index = () => {
                       results={searchResults} 
                       filterOptions={filterOptions}
                       searchQuery={searchQuery}
+                      isVisible={resultsVisible}
                     />
                   )}
                 </div>
@@ -116,7 +139,7 @@ const Index = () => {
                   className="text-2xl font-bold text-pharma-primary mb-8 text-center"
                   dir="rtl"
                 >
-                  أدوية شائعة
+                  {appLanguage.code === 'ar' ? 'أدوية شائعة' : 'Common Medications'}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
                   {featuredDrugs.map((drug) => (
@@ -136,11 +159,18 @@ const Index = () => {
                         {drug.company} - {drug.country}
                       </p>
                       <p className="text-pharma-accent font-medium mt-2">
-                        {drug.price} جنيه
+                        {drug.price} {appLanguage.code === 'ar' ? 'جنيه' : 'EGP'}
                       </p>
-                      <p className="text-xs text-gray-400 mt-3">
-                        اضغط للبحث عن البدائل
-                      </p>
+                      <div className="flex justify-between items-center mt-2">
+                        <p className="text-xs text-gray-400">
+                          {appLanguage.code === 'ar' ? 'اضغط للبحث عن البدائل' : 'Click to find alternatives'}
+                        </p>
+                        <span className={`text-xs ${drug.isAvailable ? "text-pharma-save" : "text-red-500"}`}>
+                          {drug.isAvailable 
+                            ? (appLanguage.code === 'ar' ? 'متوفر' : 'Available') 
+                            : (appLanguage.code === 'ar' ? 'غير متوفر' : 'Unavailable')}
+                        </span>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -156,13 +186,17 @@ const Index = () => {
                 className="text-3xl font-bold text-pharma-primary mb-4"
                 dir="rtl"
               >
-                لماذا تستخدم فارما فايندر جلوبال؟
+                {appLanguage.code === 'ar' 
+                  ? 'لماذا تستخدم ميدي سويتش؟' 
+                  : 'Why use MediSwitch?'}
               </h2>
               <p 
                 className="text-gray-600"
                 dir="rtl"
               >
-                نوفر لك أسهل طريقة للعثور على بدائل للأدوية بأسعار مناسبة مع التركيز على جودة المنتج
+                {appLanguage.code === 'ar' 
+                  ? 'نوفر لك أسهل طريقة للعثور على بدائل للأدوية بأسعار مناسبة مع التركيز على جودة المنتج' 
+                  : 'We provide the easiest way to find medication alternatives at reasonable prices with a focus on product quality'}
               </p>
             </div>
             
@@ -177,13 +211,15 @@ const Index = () => {
                   className="text-xl font-semibold mb-3 text-pharma-primary"
                   dir="rtl"
                 >
-                  بدائل متعددة
+                  {appLanguage.code === 'ar' ? 'بدائل متعددة' : 'Multiple Alternatives'}
                 </h3>
                 <p 
                   className="text-gray-600"
                   dir="rtl"
                 >
-                  نوفر قائمة شاملة من البدائل لكل دواء بناءً على المادة الفعالة والتركيبة الدوائية
+                  {appLanguage.code === 'ar' 
+                    ? 'نوفر قائمة شاملة من البدائل لكل دواء بناءً على المادة الفعالة والتركيبة الدوائية' 
+                    : 'We provide a comprehensive list of alternatives for each medication based on active ingredients and pharmaceutical composition'}
                 </p>
               </div>
               
@@ -197,13 +233,15 @@ const Index = () => {
                   className="text-xl font-semibold mb-3 text-pharma-primary"
                   dir="rtl"
                 >
-                  توفير المال
+                  {appLanguage.code === 'ar' ? 'توفير المال' : 'Save Money'}
                 </h3>
                 <p 
                   className="text-gray-600"
                   dir="rtl"
                 >
-                  اعثر على بدائل أقل تكلفة ومنتجة محلياً بنفس الجودة وبأسعار أفضل
+                  {appLanguage.code === 'ar' 
+                    ? 'اعثر على بدائل أقل تكلفة ومنتجة محلياً بنفس الجودة وبأسعار أفضل' 
+                    : 'Find lower-cost, locally produced alternatives with the same quality at better prices'}
                 </p>
               </div>
               
@@ -217,13 +255,15 @@ const Index = () => {
                   className="text-xl font-semibold mb-3 text-pharma-primary"
                   dir="rtl"
                 >
-                  جودة موثوقة
+                  {appLanguage.code === 'ar' ? 'جودة موثوقة' : 'Reliable Quality'}
                 </h3>
                 <p 
                   className="text-gray-600"
                   dir="rtl"
                 >
-                  نقدم معلومات عن الأدوية المعتمدة من هيئة الدواء المصرية والهيئات الدولية
+                  {appLanguage.code === 'ar' 
+                    ? 'نقدم معلومات عن الأدوية المعتمدة من هيئة الدواء المصرية والهيئات الدولية' 
+                    : 'We provide information about medications approved by the Egyptian Drug Authority and international agencies'}
                 </p>
               </div>
             </div>

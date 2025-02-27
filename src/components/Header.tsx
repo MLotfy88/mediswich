@@ -1,7 +1,13 @@
 
 import { useState, useEffect } from "react";
+import LanguageSwitcher from "./LanguageSwitcher";
+import { AppLanguage } from "@/types";
 
-export default function Header() {
+interface HeaderProps {
+  onLanguageChange: (language: AppLanguage) => void;
+}
+
+export default function Header({ onLanguageChange }: HeaderProps) {
   const [scrolled, setScrolled] = useState(false);
   
   useEffect(() => {
@@ -31,7 +37,7 @@ export default function Header() {
       <div className="container mx-auto px-4 flex justify-between items-center">
         <div className="flex items-center">
           <span className="font-bold text-xl bg-gradient-to-r from-pharma-primary to-pharma-accent bg-clip-text text-transparent">
-            PharmaFinderGlobal
+            MediSwitch
           </span>
         </div>
         
@@ -43,6 +49,7 @@ export default function Header() {
         </nav>
         
         <div className="flex items-center space-x-3">
+          <LanguageSwitcher onLanguageChange={onLanguageChange} />
           <button className="btn-pharma-outline px-4 py-2 text-sm">تسجيل الدخول</button>
           <button className="btn-pharma-primary px-4 py-2 text-sm hidden md:block">إنشاء حساب</button>
         </div>
