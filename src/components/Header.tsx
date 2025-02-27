@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import LanguageSwitcher from "./LanguageSwitcher";
+import MediSwitchLogo from "./MediSwitchLogo";
 import { AppLanguage } from "@/types";
 
 interface HeaderProps {
@@ -36,9 +37,7 @@ export default function Header({ onLanguageChange }: HeaderProps) {
     >
       <div className="container mx-auto px-4 flex justify-between items-center">
         <div className="flex items-center">
-          <span className="font-bold text-xl bg-gradient-to-r from-pharma-primary to-pharma-accent bg-clip-text text-transparent">
-            MediSwitch
-          </span>
+          <MediSwitchLogo size="md" />
         </div>
         
         <nav className="hidden md:flex space-x-6">

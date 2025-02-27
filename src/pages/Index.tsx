@@ -187,7 +187,7 @@ const Index = () => {
                 dir="rtl"
               >
                 {appLanguage.code === 'ar' 
-                  ? 'لماذا تستخدم ميدي سويتش؟' 
+                  ? 'لماذا تستخدم MediSwitch؟' 
                   : 'Why use MediSwitch?'}
               </h2>
               <p 

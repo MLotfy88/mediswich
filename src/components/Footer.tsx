@@ -1,5 +1,6 @@
 
 import { Mail, Phone, MapPin } from "lucide-react";
+import MediSwitchLogo from "./MediSwitchLogo";
 
 export default function Footer() {
   return (
@@ -7,8 +8,8 @@ export default function Footer() {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
           <div>
-            <h3 className="text-xl font-bold mb-4">PharmaFinderGlobal</h3>
-            <p className="text-white/70 mb-6" dir="rtl">
+            <MediSwitchLogo size="lg" variant="footer" />
+            <p className="text-white/70 mb-6 mt-4" dir="rtl">
               منصة مُتكاملة للبحث عن بدائل الأدوية على مستوى العالم، مع تركيز خاص على السوق المصري.
             </p>
           </div>
@@ -28,15 +29,15 @@ export default function Footer() {
             <h3 className="text-xl font-bold mb-4" dir="rtl">تواصل معنا</h3>
             <div className="space-y-3">
               <div className="flex items-center" dir="rtl">
-                <Phone size={18} className="mr-2" />
+                <Phone size={18} className="ml-2" />
                 <span className="text-white/70">+20 123 456 7890</span>
               </div>
               <div className="flex items-center" dir="rtl">
-                <Mail size={18} className="mr-2" />
-                <span className="text-white/70">info@pharmafinderglobal.com</span>
+                <Mail size={18} className="ml-2" />
+                <span className="text-white/70">info@mediswitch.com</span>
               </div>
               <div className="flex items-center" dir="rtl">
-                <MapPin size={18} className="mr-2" />
+                <MapPin size={18} className="ml-2" />
                 <span className="text-white/70">القاهرة، مصر</span>
               </div>
             </div>
@@ -44,7 +45,7 @@ export default function Footer() {
         </div>
         
         <div className="border-t border-white/20 pt-8 text-center text-white/60">
-          <p>&copy; {new Date().getFullYear()} PharmaFinderGlobal. جميع الحقوق محفوظة.</p>
+          <p>&copy; {new Date().getFullYear()} MediSwitch. جميع الحقوق محفوظة.</p>
         </div>
       </div>
     </footer>
