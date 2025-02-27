@@ -36,6 +36,10 @@ export default function DrugCard({ drug, showAlternatives = true }: DrugCardProp
             </span>
           )}
         </div>
+
+        <div className="mt-2 text-sm text-gray-600" dir="rtl">
+          المادة الفعالة: {drug.activeIngredient}
+        </div>
         
         <div className="mt-3 flex justify-between" dir="rtl">
           <span className="text-sm text-gray-600">الشركة: {drug.company}</span>
@@ -81,6 +85,9 @@ export default function DrugCard({ drug, showAlternatives = true }: DrugCardProp
                     <span className="text-sm font-medium">
                       {alt.price} جنيه
                     </span>
+                  </div>
+                  <div className="text-xs text-gray-600 mt-1">
+                    المادة الفعالة: {alt.activeIngredient}
                   </div>
                   <div className="mt-1 flex justify-between text-xs text-gray-500">
                     <span>الشركة: {alt.company}</span>

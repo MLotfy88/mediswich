@@ -7,6 +7,7 @@ export interface Alternative {
   country: string;
   isEgyptian: boolean;
   isAvailable: boolean;
+  activeIngredient: string;
 }
 
 export interface Drug {
@@ -17,6 +18,7 @@ export interface Drug {
   country: string;
   isEgyptian: boolean;
   isAvailable: boolean;
+  activeIngredient: string;
   alternatives: Alternative[];
 }
 
