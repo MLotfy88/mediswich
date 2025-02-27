@@ -1,13 +1,14 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Drug, FilterOptions } from "@/types";
-import { searchDrugs } from "@/services/drugService";
+import { searchDrugs, getAllDrugs } from "@/services/drugService";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import SearchBar from "@/components/SearchBar";
 import FilterPanel from "@/components/FilterPanel";
 import SearchResults from "@/components/SearchResults";
 import Footer from "@/components/Footer";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [searchResults, setSearchResults] = useState<Drug[]>([]);
@@ -20,6 +21,19 @@ const Index = () => {
     }
   });
   const [isSearching, setIsSearching] = useState(false);
+  const [featuredDrugs, setFeaturedDrugs] = useState<Drug[]>([]);
+  const { toast } = useToast();
+
+  // Load some featured drugs on initial load
+  useEffect(() => {
+    const allDrugs = getAllDrugs();
+    // Get random 6 drugs for featured section
+    const randomDrugs = [...allDrugs]
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 6);
+    
+    setFeaturedDrugs(randomDrugs);
+  }, []);
 
   const handleSearch = (query: string) => {
     setIsSearching(true);
@@ -30,6 +44,20 @@ const Index = () => {
       const results = searchDrugs(query);
       setSearchResults(results);
       setIsSearching(false);
+      
+      // Show toast for search results
+      if (results.length > 0) {
+        toast({
+          title: "تم العثور على نتائج",
+          description: `تم العثور على ${results.length} نتيجة لـ "${query}"`,
+        });
+      } else {
+        toast({
+          title: "لا توجد نتائج",
+          description: `لم يتم العثور على نتائج لـ "${query}"`,
+          variant: "destructive",
+        });
+      }
     }, 500);
   };
 
@@ -77,6 +105,44 @@ const Index = () => {
                       searchQuery={searchQuery}
                     />
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* Featured Drugs Section - shown when no search is performed */}
+            {!searchQuery && featuredDrugs.length > 0 && (
+              <div className="mt-16">
+                <h2 
+                  className="text-2xl font-bold text-pharma-primary mb-8 text-center"
+                  dir="rtl"
+                >
+                  أدوية شائعة
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
+                  {featuredDrugs.map((drug) => (
+                    <div 
+                      key={drug.id}
+                      className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer"
+                      dir="rtl"
+                      onClick={() => {
+                        setSearchQuery(drug.name);
+                        handleSearch(drug.name);
+                      }}
+                    >
+                      <h3 className="text-lg font-medium text-pharma-primary">
+                        {drug.name}
+                      </h3>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {drug.company} - {drug.country}
+                      </p>
+                      <p className="text-pharma-accent font-medium mt-2">
+                        {drug.price} جنيه
+                      </p>
+                      <p className="text-xs text-gray-400 mt-3">
+                        اضغط للبحث عن البدائل
+                      </p>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
