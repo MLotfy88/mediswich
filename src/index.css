@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -13,16 +14,16 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 210 64% 34%; /* #2A5C82 */
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 210 40% 96.1%;
+    --secondary: 220 20% 97%; /* #F5F7FA */
     --secondary-foreground: 222.2 47.4% 11.2%;
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 210 40% 96.1%;
+    --accent: 35 33% 59%; /* #C19A6B */
     --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
@@ -35,19 +36,12 @@
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -96,6 +90,36 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-secondary text-foreground;
+  }
+}
+
+@layer components {
+  .egyptian-card {
+    @apply border-r-4 border-pharma-accent;
+  }
+  
+  .search-input {
+    @apply w-full px-6 py-4 text-lg bg-white rounded-full border border-border shadow-sm transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-pharma-primary/20 focus:border-pharma-primary;
+  }
+  
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-md hover:translate-y-[-2px];
+  }
+  
+  .btn-pharma {
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background;
+  }
+  
+  .btn-pharma-primary {
+    @apply btn-pharma bg-pharma-primary text-white hover:bg-pharma-primary/90;
+  }
+  
+  .btn-pharma-accent {
+    @apply btn-pharma bg-pharma-accent text-white hover:bg-pharma-accent/90;
+  }
+  
+  .btn-pharma-outline {
+    @apply btn-pharma border border-input hover:bg-accent hover:text-accent-foreground;
   }
 }
