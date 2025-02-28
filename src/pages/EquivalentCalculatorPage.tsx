@@ -4,6 +4,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import DosageEquivalentCalculator from '@/components/DosageEquivalentCalculator';
 import { AppLanguage } from '@/types';
+import { v4 as uuidv4 } from 'uuid';
 
 // تعريف نموذج للعمليات السابقة
 interface EquivalentCalculationHistory {
@@ -92,10 +93,7 @@ export default function EquivalentCalculatorPage() {
           </div>
           
           <div className="mb-16">
-            <DosageEquivalentCalculator 
-              onCalculate={addToHistory} 
-              currentLanguage={language} 
-            />
+            <DosageEquivalentCalculator onCalculate={addToHistory} currentLanguage={language} />
           </div>
           
           {/* سجل العمليات السابقة */}
