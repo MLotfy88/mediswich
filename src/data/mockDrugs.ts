@@ -10,6 +10,7 @@ import { cholesterolLowering } from "./drugs/cholesterolLowering";
 import { psychotropics } from "./drugs/psychotropics";
 import { hormones } from "./drugs/hormones";
 import { specialMedications } from "./drugs/specialMedications";
+import { altibbiMedications } from "./drugs/altibbiMedications";
 
 // تجميع كل الأدوية من جميع الفئات في مصفوفة واحدة
 export const mockDrugs: Drug[] = [
@@ -22,5 +23,6 @@ export const mockDrugs: Drug[] = [
   ...cholesterolLowering,
   ...psychotropics,
   ...hormones,
-  ...specialMedications
+  ...specialMedications,
+  ...altibbiMedications
 ];

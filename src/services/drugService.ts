@@ -1,3 +1,4 @@
+
 import { Drug } from "@/types";
 import { mockDrugs } from "@/data/mockDrugs";
 
@@ -37,7 +38,26 @@ export const searchDrugs = (query: string): Drug[] => {
     "concor": "كونكور",
     "xanax": "زاناكس",
     "augmentin": "أوجمنتين",
-    "nexium": "نيكسيوم"
+    "nexium": "نيكسيوم",
+    "viagra": "فياجرا",
+    "voltaren": "فولتارين",
+    "lipitor": "ليبيتور",
+    "claritine": "كلاريتين",
+    "norvasc": "نورفاسك",
+    "yasmin": "ياسمين",
+    "zantac": "زانتاك",
+    "advil": "أديفيل",
+    "betadine": "بيتادين",
+    "brufen": "بروفين",
+    "panadol": "بنادول",
+    "duphaston": "دوفاستون",
+    "tamiflu": "تاميفلو",
+    "telfast": "تلفاست",
+    "daflon": "دافلون",
+    "actifed": "آكتيفيد",
+    "actos": "أكتوس",
+    "aldactone": "أداكتون",
+    "intal": "إنتال"
   };
   
   // Bidirectional mapping
