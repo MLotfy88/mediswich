@@ -1,5 +1,5 @@
 
-import { MoveDownRight, Pill, Capsule } from "lucide-react";
+import { MoveDownRight, Pill, PillIcon } from "lucide-react";
 
 interface MediSwitchLogoProps {
   size?: 'sm' | 'md' | 'lg';
@@ -61,7 +61,7 @@ export default function MediSwitchLogo({ size = 'md', variant = 'default' }: Med
         <div className={`flex items-center ${sizes[size].iconGap}`}>
           <Pill className={colors[variant].pillColor} strokeWidth={3} size={sizes[size].iconSize} />
           <MoveDownRight className={colors[variant].arrowColor} strokeWidth={3} size={sizes[size].iconSize} />
-          <Capsule className={colors[variant].capsuleColor} strokeWidth={3} size={sizes[size].iconSize} />
+          <PillIcon className={colors[variant].capsuleColor} strokeWidth={3} size={sizes[size].iconSize} />
         </div>
         <span className={`
           ml-2 font-bold ${sizes[size].logoSize} 
