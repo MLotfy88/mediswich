@@ -1,34 +1,24 @@
 
 import { Search } from "lucide-react";
-import { useState } from "react";
-import SearchBar from "./SearchBar";
-import SearchResults from "./SearchResults";
-import FilterPanel from "./FilterPanel";
-import { FilterOptions, Drug } from "@/types";
-import { searchDrugs } from "@/services/drugService";
+import { Link } from "react-router-dom";
+import { AppLanguage } from "@/types";
 
-export default function Hero() {
-  const [searchResults, setSearchResults] = useState<Drug[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showResults, setShowResults] = useState(false);
-  const [filterOptions, setFilterOptions] = useState<FilterOptions>({
-    country: "all",
-    priceRange: {
-      min: 0,
-      max: 200
-    },
-    availability: "all"
-  });
+interface HeroProps {
+  appLanguage?: AppLanguage;
+}
 
-  const handleSearch = (query: string) => {
-    const results = searchDrugs(query);
-    setSearchResults(results);
-    setSearchQuery(query);
-    setShowResults(true);
-  };
-
-  const handleFilterChange = (newFilters: FilterOptions) => {
-    setFilterOptions(newFilters);
+export default function Hero({ appLanguage = { code: 'ar', direction: 'rtl' } }: HeroProps) {
+  // الترجمات حسب اللغة
+  const translations = {
+    title: appLanguage.code === 'ar' 
+      ? "المنصة الذكية الشاملة لإدارة الأدوية وتبديلها بذكاء!"
+      : "The Comprehensive Smart Platform for Medication Management and Intelligent Switching!",
+    description: appLanguage.code === 'ar'
+      ? "ابحث عن بدائل للأدوية، قارن الجرعات، واحسب الجرعات المناسبة حسب وزن المريض. تطبيق مصمم خصيصًا للأطباء والصيادلة في مصر والعالم."
+      : "Search for medication alternatives, compare dosages, and calculate appropriate doses based on patient weight. An application specially designed for doctors and pharmacists in Egypt and worldwide.",
+    searchByIngredient: appLanguage.code === 'ar' ? "بحث بالمادة الفعالة" : "Search by Active Ingredient",
+    dosageCalculator: appLanguage.code === 'ar' ? "حاسبة الجرعات" : "Dosage Calculator",
+    equivalentCalculator: appLanguage.code === 'ar' ? "مقارنة الأدوية" : "Compare Medications"
   };
 
   return (
@@ -37,113 +27,60 @@ export default function Hero() {
         <div className="text-center mb-12 max-w-3xl mx-auto">
           <h1 
             className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4" 
-            dir="rtl"
+            dir={appLanguage.direction}
           >
-            المنصة الذكية الشاملة لإدارة الأدوية وتبديلها بذكاء!
+            {translations.title}
           </h1>
           <p 
             className="text-lg text-gray-600 mb-8" 
-            dir="rtl"
+            dir={appLanguage.direction}
           >
-            ابحث عن بدائل للأدوية، قارن الجرعات، واحسب الجرعات المناسبة حسب وزن المريض. تطبيق مصمم خصيصًا للأطباء والصيادلة في مصر والعالم.
+            {translations.description}
           </p>
           
-          <div className="mb-10">
-            <SearchBar onSearch={handleSearch} />
-          </div>
-
-          <div className="flex flex-wrap gap-4 justify-center">
-            <button className="feature-btn">
-              <Search size={20} className="mr-2" />
-              <span>بحث بالمادة الفعالة</span>
-            </button>
-            <button className="feature-btn">
-              <span>حاسبة الجرعات</span>
-            </button>
-            <button className="feature-btn">
-              <span>مقارنة الأدوية</span>
-            </button>
-          </div>
-        </div>
-
-        {showResults && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="md:col-span-1">
-              <FilterPanel onFilterChange={handleFilterChange} />
-            </div>
-            <div className="md:col-span-3">
-              <SearchResults 
-                results={searchResults} 
-                filterOptions={filterOptions} 
-                searchQuery={searchQuery}
-                isVisible={showResults}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* New features showcase */}
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-border hover:shadow-md transition-shadow">
-            <div className="mb-4 h-12 w-12 rounded-full bg-pharma-primary/10 flex items-center justify-center">
-              <Search className="text-pharma-primary" size={24} />
-            </div>
-            <h3 className="text-xl font-bold mb-2" dir="rtl">البحث الذكي عن بدائل الأدوية</h3>
-            <p className="text-gray-600" dir="rtl">
-              دعم البحث باللغتين العربية والإنجليزية مع عرض اقتراحات تلقائية أثناء الكتابة وتصفية النتائج حسب التوفر والسعر.
-            </p>
-          </div>
-          
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-border hover:shadow-md transition-shadow">
-            <div className="mb-4 h-12 w-12 rounded-full bg-pharma-accent/10 flex items-center justify-center">
-              <svg className="text-pharma-accent" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 4V20M18 12H6" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <h3 className="text-xl font-bold mb-2" dir="rtl">مقارنة الجرعات المكافئة</h3>
-            <p className="text-gray-600" dir="rtl">
-              تحويل جرعات الأدوية إلى مكافئاتها مع دعم الوحدات المختلفة وعرض رسوم بيانية توضح نسب الفعالية والسمية.
-            </p>
-          </div>
-          
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-border hover:shadow-md transition-shadow">
-            <div className="mb-4 h-12 w-12 rounded-full bg-pharma-save/10 flex items-center justify-center">
-              <svg className="text-pharma-save" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M17 18C17 16.3431 14.7614 15 12 15C9.23858 15 7 16.3431 7 18" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="12" cy="10" r="3" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <h3 className="text-xl font-bold mb-2" dir="rtl">حاسبة جرعة الدواء</h3>
-            <p className="text-gray-600" dir="rtl">
-              إدخال وزن المريض للحصول على جرعة مخصصة مع تنبيهات فورية عند تجاوز الحدود الآمنة للجرعات وإمكانية حفظ ومشاركة الحسابات.
-            </p>
+          <div className="flex flex-wrap gap-4 justify-center mt-10">
+            <Link to="/" className="feature-btn">
+              <Search size={20} className={appLanguage.direction === 'rtl' ? "ml-2" : "mr-2"} />
+              <span>{translations.searchByIngredient}</span>
+            </Link>
+            <Link to="/calculator/dosage" className="feature-btn">
+              <span>{translations.dosageCalculator}</span>
+            </Link>
+            <Link to="/calculator/equivalent" className="feature-btn">
+              <span>{translations.equivalentCalculator}</span>
+            </Link>
           </div>
         </div>
 
         {/* Data sources section */}
         <div className="mt-16 bg-white p-8 rounded-xl shadow-sm border border-border">
-          <h2 className="text-2xl font-bold mb-6 text-center" dir="rtl">قواعد البيانات المُدمجة</h2>
+          <h2 className="text-2xl font-bold mb-6 text-center" dir={appLanguage.direction}>
+            {appLanguage.code === 'ar' ? 'قواعد البيانات المُدمجة' : 'Integrated Databases'}
+          </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <h3 className="text-xl font-bold mb-4 text-pharma-primary" dir="rtl">مصادر مصرية</h3>
-              <ul className="space-y-2 list-disc list-inside text-gray-600" dir="rtl">
-                <li>الهيئة المصرية للدواء (EDA)</li>
-                <li>الدواء المصري (EIP)</li>
-                <li>الإرشادات العلاجية لوزارة الصحة المصرية</li>
-                <li>قواعد بيانات المستشفيات الجامعية</li>
+              <h3 className="text-xl font-bold mb-4 text-pharma-primary" dir={appLanguage.direction}>
+                {appLanguage.code === 'ar' ? 'مصادر مصرية' : 'Egyptian Sources'}
+              </h3>
+              <ul className="space-y-2 list-disc list-inside text-gray-600" dir={appLanguage.direction}>
+                <li>{appLanguage.code === 'ar' ? 'الهيئة المصرية للدواء (EDA)' : 'Egyptian Drug Authority (EDA)'}</li>
+                <li>{appLanguage.code === 'ar' ? 'الدواء المصري (EIP)' : 'Egyptian Pharmaceutical Index (EIP)'}</li>
+                <li>{appLanguage.code === 'ar' ? 'الإرشادات العلاجية لوزارة الصحة المصرية' : 'Ministry of Health Therapeutic Guidelines'}</li>
+                <li>{appLanguage.code === 'ar' ? 'قواعد بيانات المستشفيات الجامعية' : 'University Hospitals Databases'}</li>
               </ul>
             </div>
             
             <div>
-              <h3 className="text-xl font-bold mb-4 text-pharma-accent" dir="rtl">مصادر عالمية</h3>
-              <ul className="space-y-2 list-disc list-inside text-gray-600" dir="rtl">
-                <li>قائمة منظمة الصحة العالمية (WHO EML)</li>
-                <li>Drugs.com و RxList</li>
+              <h3 className="text-xl font-bold mb-4 text-pharma-accent" dir={appLanguage.direction}>
+                {appLanguage.code === 'ar' ? 'مصادر عالمية' : 'Global Sources'}
+              </h3>
+              <ul className="space-y-2 list-disc list-inside text-gray-600" dir={appLanguage.direction}>
+                <li>{appLanguage.code === 'ar' ? 'قائمة منظمة الصحة العالمية (WHO EML)' : 'WHO Essential Medicines List (WHO EML)'}</li>
+                <li>Drugs.com {appLanguage.code === 'ar' ? 'و' : '&'} RxList</li>
                 <li>FDA Orange Book</li>
-                <li>Micromedex و UpToDate</li>
-                <li>PubMed و ClinicalTrials.gov</li>
+                <li>Micromedex {appLanguage.code === 'ar' ? 'و' : '&'} UpToDate</li>
+                <li>PubMed {appLanguage.code === 'ar' ? 'و' : '&'} ClinicalTrials.gov</li>
               </ul>
             </div>
           </div>
@@ -151,8 +88,10 @@ export default function Hero() {
 
         {/* Marketing tagline */}
         <div className="mt-16 text-center">
-          <p className="text-xl md:text-2xl font-bold text-pharma-primary" dir="rtl">
-            MediSwitch – حيث الدقة الطبية تلتقي بالذكاء الاصطناعي لخدمة الطب المصري والعالمي! 🌍💊
+          <p className="text-xl md:text-2xl font-bold text-pharma-primary" dir={appLanguage.direction}>
+            {appLanguage.code === 'ar' 
+              ? 'MediSwitch – حيث الدقة الطبية تلتقي بالذكاء الاصطناعي لخدمة الطب المصري والعالمي! 🌍💊'
+              : 'MediSwitch – Where Medical Precision Meets Artificial Intelligence for Egyptian and Global Medicine! 🌍💊'}
           </p>
         </div>
       </div>

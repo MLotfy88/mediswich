@@ -1,26 +1,40 @@
 
-import { Info } from "lucide-react";
+import { Search } from "lucide-react";
+import { AppLanguage } from "@/types";
 
 interface NoResultsProps {
-  query: string;
+  title?: string;
+  description?: string;
+  currentLanguage?: AppLanguage;
 }
 
-export default function NoResults({ query }: NoResultsProps) {
+export default function NoResults({ 
+  title, 
+  description,
+  currentLanguage = { code: 'ar', direction: 'rtl' }
+}: NoResultsProps) {
+  const defaultTitle = currentLanguage.code === 'ar' 
+    ? "لم يتم العثور على نتائج" 
+    : "No Results Found";
+  
+  const defaultDescription = currentLanguage.code === 'ar'
+    ? "لم نتمكن من العثور على أدوية تطابق استعلام البحث الخاص بك. يرجى تجربة كلمات رئيسية مختلفة."
+    : "We couldn't find any medications matching your search query. Please try different keywords.";
+
   return (
-    <div className="flex flex-col items-center justify-center p-10 bg-white rounded-xl shadow-sm border border-border text-center animate-fade-in max-w-md mx-auto">
-      <Info className="text-pharma-primary mb-4" size={32} />
-      <h3 className="text-xl font-medium text-gray-900 mb-2" dir="rtl">
-        لا توجد نتائج لـ "{query}"
+    <div 
+      className="flex flex-col items-center justify-center text-center py-16"
+      dir={currentLanguage.direction}
+    >
+      <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+        <Search className="w-10 h-10 text-gray-400" />
+      </div>
+      <h3 className="text-xl font-bold text-gray-700 mb-2">
+        {title || defaultTitle}
       </h3>
-      <p className="text-gray-600 mb-4" dir="rtl">
-        هل تبحث عن دواء مصري؟ تواصل مع خدمة العملاء لدينا للمساعدة.
+      <p className="text-gray-500 max-w-md">
+        {description || defaultDescription}
       </p>
-      <button 
-        className="btn-pharma-primary px-4 py-2"
-        onClick={() => window.location.href = "#contact"}
-      >
-        تواصل معنا
-      </button>
     </div>
   );
 }

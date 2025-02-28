@@ -4,7 +4,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 import Index from './pages/Index';
 import NotFound from './pages/NotFound';
-import CalculatorPage from './pages/CalculatorPage';
+import DosageCalculatorPage from './pages/DosageCalculatorPage';
+import EquivalentCalculatorPage from './pages/EquivalentCalculatorPage';
 import { AppLanguage } from './types';
 
 function App() {
@@ -22,7 +23,8 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Index />} />
-        <Route path="/calculator" element={<CalculatorPage />} />
+        <Route path="/calculator/dosage" element={<DosageCalculatorPage />} />
+        <Route path="/calculator/equivalent" element={<EquivalentCalculatorPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>

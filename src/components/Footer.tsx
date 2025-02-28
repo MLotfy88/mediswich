@@ -1,51 +1,103 @@
 
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
 import MediSwitchLogo from "./MediSwitchLogo";
+import { AppLanguage } from "@/types";
+import { Heart } from "lucide-react";
 
-export default function Footer() {
+interface FooterProps {
+  currentLanguage?: AppLanguage;
+}
+
+export default function Footer({ currentLanguage = { code: 'ar', direction: 'rtl' } }: FooterProps) {
+  const translations = {
+    links: currentLanguage.code === 'ar' ? 'روابط سريعة' : 'Quick Links',
+    home: currentLanguage.code === 'ar' ? 'الرئيسية' : 'Home',
+    about: currentLanguage.code === 'ar' ? 'من نحن' : 'About Us',
+    contact: currentLanguage.code === 'ar' ? 'اتصل بنا' : 'Contact Us',
+    privacy: currentLanguage.code === 'ar' ? 'سياسة الخصوصية' : 'Privacy Policy',
+    terms: currentLanguage.code === 'ar' ? 'شروط الاستخدام' : 'Terms of Use',
+    calculators: currentLanguage.code === 'ar' ? 'الحاسبات' : 'Calculators',
+    dosage: currentLanguage.code === 'ar' ? 'حاسبة الجرعات' : 'Dosage Calculator',
+    equivalent: currentLanguage.code === 'ar' ? 'حاسبة المكافئات' : 'Equivalent Calculator',
+    copyright: currentLanguage.code === 'ar' ? 'جميع الحقوق محفوظة' : 'All rights reserved',
+    madeWith: currentLanguage.code === 'ar' ? 'صنع بـ' : 'Made with',
+    in: currentLanguage.code === 'ar' ? 'في' : 'in',
+    egypt: currentLanguage.code === 'ar' ? 'مصر' : 'Egypt'
+  };
+
   return (
-    <footer className="bg-pharma-primary text-white pt-16 pb-8">
+    <footer className="bg-pharma-primary text-white py-16">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-          <div className="flex flex-col items-center md:items-start">
-            <MediSwitchLogo size="lg" variant="footer" />
-            <p className="text-white/70 mb-6 mt-4" dir="rtl">
-              منصة مُتكاملة للبحث عن بدائل الأدوية على مستوى العالم، مع تركيز خاص على السوق المصري.
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div>
+            <div className="mb-6">
+              <MediSwitchLogo variant="footer" />
+            </div>
+            <p 
+              className="text-gray-200 mb-4"
+              dir={currentLanguage.direction}
+            >
+              {currentLanguage.code === 'ar' 
+                ? 'المنصة الذكية الشاملة لإدارة الأدوية وتبديلها بذكاء. تم تطويرها لمساعدة الأطباء والصيادلة في مصر والعالم.'
+                : 'The comprehensive smart platform for medication management and intelligent switching. Developed to assist doctors and pharmacists in Egypt and worldwide.'}
             </p>
           </div>
           
-          <div>
-            <h3 className="text-xl font-bold mb-4" dir="rtl">روابط سريعة</h3>
-            <ul className="space-y-2" dir="rtl">
-              <li><a href="#" className="text-white/70 hover:text-white transition-colors">الرئيسية</a></li>
-              <li><a href="#" className="text-white/70 hover:text-white transition-colors">البحث</a></li>
-              <li><a href="#" className="text-white/70 hover:text-white transition-colors">عن التطبيق</a></li>
-              <li><a href="#" className="text-white/70 hover:text-white transition-colors">اتصل بنا</a></li>
-              <li><a href="#" className="text-white/70 hover:text-white transition-colors">سياسة الخصوصية</a></li>
+          <div dir={currentLanguage.direction}>
+            <h3 className="text-xl font-semibold mb-4">{translations.links}</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link to="/" className="text-gray-200 hover:text-white transition-colors">
+                  {translations.home}
+                </Link>
+              </li>
+              <li>
+                <Link to="/about" className="text-gray-200 hover:text-white transition-colors">
+                  {translations.about}
+                </Link>
+              </li>
+              <li>
+                <Link to="/contact" className="text-gray-200 hover:text-white transition-colors">
+                  {translations.contact}
+                </Link>
+              </li>
+              <li>
+                <Link to="/privacy" className="text-gray-200 hover:text-white transition-colors">
+                  {translations.privacy}
+                </Link>
+              </li>
+              <li>
+                <Link to="/terms" className="text-gray-200 hover:text-white transition-colors">
+                  {translations.terms}
+                </Link>
+              </li>
             </ul>
           </div>
           
-          <div id="contact">
-            <h3 className="text-xl font-bold mb-4" dir="rtl">تواصل معنا</h3>
-            <div className="space-y-3">
-              <div className="flex items-center" dir="rtl">
-                <Phone size={18} className="ml-2" />
-                <span className="text-white/70">+20 123 456 7890</span>
-              </div>
-              <div className="flex items-center" dir="rtl">
-                <Mail size={18} className="ml-2" />
-                <span className="text-white/70">info@mediswitch.com</span>
-              </div>
-              <div className="flex items-center" dir="rtl">
-                <MapPin size={18} className="ml-2" />
-                <span className="text-white/70">القاهرة، مصر</span>
-              </div>
-            </div>
+          <div dir={currentLanguage.direction}>
+            <h3 className="text-xl font-semibold mb-4">{translations.calculators}</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link to="/calculator/dosage" className="text-gray-200 hover:text-white transition-colors">
+                  {translations.dosage}
+                </Link>
+              </li>
+              <li>
+                <Link to="/calculator/equivalent" className="text-gray-200 hover:text-white transition-colors">
+                  {translations.equivalent}
+                </Link>
+              </li>
+            </ul>
           </div>
         </div>
         
-        <div className="border-t border-white/20 pt-8 text-center text-white/60">
-          <p>&copy; {new Date().getFullYear()} MediSwitch. جميع الحقوق محفوظة.</p>
+        <div className="mt-12 pt-8 border-t border-white/20 text-center">
+          <p dir={currentLanguage.direction}>
+            &copy; {new Date().getFullYear()} MediSwitch. {translations.copyright}.
+          </p>
+          <p className="mt-2 flex items-center justify-center">
+            {translations.madeWith} <Heart size={16} className="mx-1 text-red-400" /> {translations.in} {translations.egypt}
+          </p>
         </div>
       </div>
     </footer>
