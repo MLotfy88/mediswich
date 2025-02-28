@@ -35,3 +35,26 @@ export interface AppLanguage {
   code: 'ar' | 'en';
   direction: 'rtl' | 'ltr';
 }
+
+export interface DosageCalculation {
+  patientWeight: number;
+  weightUnit: 'kg' | 'lb';
+  drugName: string;
+  dosagePerKg: number;
+  frequency: number;
+  duration: number;
+}
+
+export interface EquivalentDosage {
+  drugA: {
+    name: string;
+    dosage: number;
+    unit: string;
+  };
+  drugB: {
+    name: string;
+    dosage: number;
+    unit: string;
+  };
+  conversionRatio: number;
+}

@@ -1,9 +1,10 @@
 
 import { useState, useEffect, useRef } from "react";
+import { Link, useLocation } from "react-router-dom";
 import LanguageSwitcher from "./LanguageSwitcher";
 import MediSwitchLogo from "./MediSwitchLogo";
 import { AppLanguage } from "@/types";
-import { UserCircle, LogIn, UserPlus, ChevronDown } from "lucide-react";
+import { UserCircle, LogIn, UserPlus, ChevronDown, Calculator, Search, Info, Mail } from "lucide-react";
 
 interface HeaderProps {
   onLanguageChange: (language: AppLanguage) => void;
@@ -13,6 +14,7 @@ export default function Header({ onLanguageChange }: HeaderProps) {
   const [scrolled, setScrolled] = useState(false);
   const [showAuthMenu, setShowAuthMenu] = useState(false);
   const authMenuRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
   
   useEffect(() => {
     const handleScroll = () => {
@@ -55,15 +57,39 @@ export default function Header({ onLanguageChange }: HeaderProps) {
       <div className="container mx-auto px-4 flex justify-between items-center">
         <div className="flex-1">
           <nav className="hidden md:flex space-x-6 justify-start">
-            <a href="#" className="text-gray-700 hover:text-pharma-primary transition-colors">الرئيسية</a>
-            <a href="#" className="text-gray-700 hover:text-pharma-primary transition-colors">البحث</a>
-            <a href="#" className="text-gray-700 hover:text-pharma-primary transition-colors">عن التطبيق</a>
-            <a href="#contact" className="text-gray-700 hover:text-pharma-primary transition-colors">اتصل بنا</a>
+            <Link 
+              to="/" 
+              className={`flex items-center text-gray-700 hover:text-pharma-primary transition-colors ${
+                location.pathname === '/' ? 'text-pharma-primary font-medium' : ''
+              }`}
+            >
+              <Search size={18} className="ml-2" />
+              <span>البحث</span>
+            </Link>
+            <Link 
+              to="/calculator" 
+              className={`flex items-center text-gray-700 hover:text-pharma-primary transition-colors ${
+                location.pathname === '/calculator' ? 'text-pharma-primary font-medium' : ''
+              }`}
+            >
+              <Calculator size={18} className="ml-2" />
+              <span>حاسبة الجرعات</span>
+            </Link>
+            <a href="#" className="flex items-center text-gray-700 hover:text-pharma-primary transition-colors">
+              <Info size={18} className="ml-2" />
+              <span>عن التطبيق</span>
+            </a>
+            <a href="#contact" className="flex items-center text-gray-700 hover:text-pharma-primary transition-colors">
+              <Mail size={18} className="ml-2" />
+              <span>اتصل بنا</span>
+            </a>
           </nav>
         </div>
         
         <div className="flex items-center justify-center flex-1">
-          <MediSwitchLogo size="md" />
+          <Link to="/">
+            <MediSwitchLogo size="md" />
+          </Link>
         </div>
         
         <div className="flex items-center justify-end space-x-4 flex-1">

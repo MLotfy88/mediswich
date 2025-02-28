@@ -1,42 +1,118 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --pharma-primary: #1EAEDB;
+  --pharma-primary-dark: #0FA0CE;
+  --pharma-accent: #FFBF00;
+  --pharma-accent-light: #FFD700;
+  --pharma-secondary: #f3f7ff;
+  --pharma-save: #22c55e;
+  --pharma-card: #ffffff;
+  --pharma-text-primary: #333333;
+  --pharma-text-secondary: #555555;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* Dark theme variables */
+.dark {
+  --pharma-primary: #00b7ff;
+  --pharma-primary-dark: #00a0e0;
+  --pharma-accent: #ffd000;
+  --pharma-accent-light: #ffe257;
+  --pharma-secondary: #111a2a;
+  --pharma-save: #22c55e;
+  --pharma-card: #182234;
+  --pharma-text-primary: #f3f3f3;
+  --pharma-text-secondary: #c8c8c9;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', 'Cairo', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #ffffff;
+  color: var(--pharma-text-primary);
 }
 
-.card {
-  padding: 2em;
+[dir="rtl"] {
+  font-family: 'Cairo', 'Poppins', sans-serif;
 }
 
-.read-the-docs {
-  color: #888;
+.search-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 9999px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  outline: none;
+  transition: all 0.2s ease-in-out;
+  font-size: 1rem;
+  background-color: #fff;
+}
+
+.search-input:focus {
+  border-color: var(--pharma-primary);
+  box-shadow: 0 0 0 3px rgba(30, 174, 219, 0.15);
+}
+
+.egyptian-card {
+  border-right: 4px solid var(--pharma-accent);
+}
+
+.card-hover {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Animations */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+/* Feature buttons */
+.feature-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1.5rem;
+  border-radius: 9999px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.2s ease-in-out;
+  background-color: rgba(30, 174, 219, 0.1);
+  color: var(--pharma-primary);
+  border: 1px solid rgba(30, 174, 219, 0.2);
+}
+
+.feature-btn:hover {
+  background-color: rgba(30, 174, 219, 0.15);
+  box-shadow: 0 3px 10px rgba(30, 174, 219, 0.2);
+}
+
+/* Glass morphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.dark .glass {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }

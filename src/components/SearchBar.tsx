@@ -9,10 +9,10 @@ interface SearchBarProps {
   placeholder?: string;
 }
 
-export default function SearchBar({ onSearch, placeholder = "ابحث عن دواء..." }: SearchBarProps) {
+export default function SearchBar({ onSearch, placeholder = "ابحث عن دواء أو مادة فعالة..." }: SearchBarProps) {
   const [query, setQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<{name: string, type: 'drug' | 'ingredient'}[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
@@ -26,15 +26,16 @@ export default function SearchBar({ onSearch, placeholder = "ابحث عن دو�
 
     const normalizedQuery = query.trim().toLowerCase();
     
-    // Generate unique list of drug names for suggestions
+    // Generate unique list of drug names and active ingredients for suggestions
     const drugNames = new Set<string>();
+    const activeIngredients = new Set<string>();
     
     mockDrugs.forEach(drug => {
       if (drug.name.toLowerCase().includes(normalizedQuery)) {
         drugNames.add(drug.name);
       }
       if (drug.activeIngredient.toLowerCase().includes(normalizedQuery)) {
-        drugNames.add(drug.activeIngredient);
+        activeIngredients.add(drug.activeIngredient);
       }
       
       // Also check alternatives
@@ -43,12 +44,18 @@ export default function SearchBar({ onSearch, placeholder = "ابحث عن دو�
           drugNames.add(alt.name);
         }
         if (alt.activeIngredient.toLowerCase().includes(normalizedQuery)) {
-          drugNames.add(alt.activeIngredient);
+          activeIngredients.add(alt.activeIngredient);
         }
       });
     });
     
-    setSuggestions(Array.from(drugNames).slice(0, 7)); // Limit to 7 suggestions
+    // Combine and limit suggestions
+    const combinedSuggestions = [
+      ...Array.from(drugNames).map(name => ({ name, type: 'drug' as const })),
+      ...Array.from(activeIngredients).map(name => ({ name, type: 'ingredient' as const }))
+    ].slice(0, 7); // Limit to 7 suggestions
+    
+    setSuggestions(combinedSuggestions);
     setShowSuggestions(true);
   }, [query]);
 
@@ -129,10 +136,17 @@ export default function SearchBar({ onSearch, placeholder = "ابحث عن دو�
             {suggestions.map((suggestion, index) => (
               <li 
                 key={index} 
-                className="px-4 py-2 hover:bg-pharma-primary/10 cursor-pointer text-right"
-                onClick={() => handleSuggestionClick(suggestion)}
+                className="px-4 py-2 hover:bg-pharma-primary/10 cursor-pointer text-right flex justify-between items-center"
+                onClick={() => handleSuggestionClick(suggestion.name)}
               >
-                {suggestion}
+                <span>{suggestion.name}</span>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${
+                  suggestion.type === 'drug' 
+                  ? 'bg-pharma-primary/10 text-pharma-primary' 
+                  : 'bg-pharma-accent/10 text-pharma-accent'
+                }`}>
+                  {suggestion.type === 'drug' ? 'دواء' : 'مادة فعالة'}
+                </span>
               </li>
             ))}
           </ul>
