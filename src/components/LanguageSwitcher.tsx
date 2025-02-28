@@ -1,14 +1,24 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AppLanguage } from '@/types';
 import { Globe } from 'lucide-react';
 
 interface LanguageSwitcherProps {
   onLanguageChange: (language: AppLanguage) => void;
+  currentLanguage?: AppLanguage;
 }
 
-export default function LanguageSwitcher({ onLanguageChange }: LanguageSwitcherProps) {
-  const [currentLang, setCurrentLang] = useState<AppLanguage>({ code: 'ar', direction: 'rtl' });
+export default function LanguageSwitcher({ onLanguageChange, currentLanguage }: LanguageSwitcherProps) {
+  const [currentLang, setCurrentLang] = useState<AppLanguage>(
+    currentLanguage || { code: 'ar', direction: 'rtl' }
+  );
+
+  // تحديث حالة اللغة الحالية عند تغييرها من الخارج
+  useEffect(() => {
+    if (currentLanguage) {
+      setCurrentLang(currentLanguage);
+    }
+  }, [currentLanguage]);
 
   const toggleLanguage = () => {
     const newLang: AppLanguage = 

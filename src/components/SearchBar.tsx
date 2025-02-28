@@ -1,15 +1,16 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Search } from "lucide-react";
-import { mockDrugs } from "@/data/mockDrugs";
-import { Drug } from "@/types";
+import { searchDrugSuggestions } from "@/services/drugService";
+import { AppLanguage } from "@/types";
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
   placeholder?: string;
+  currentLanguage?: AppLanguage;
 }
 
-export default function SearchBar({ onSearch, placeholder = "ابحث عن دواء أو مادة فعالة..." }: SearchBarProps) {
+export default function SearchBar({ onSearch, placeholder = "ابحث عن دواء أو مادة فعالة...", currentLanguage }: SearchBarProps) {
   const [query, setQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [suggestions, setSuggestions] = useState<{name: string, type: 'drug' | 'ingredient'}[]>([]);
@@ -17,49 +18,25 @@ export default function SearchBar({ onSearch, placeholder = "ابحث عن دو�
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
-  // Generate suggestions based on the current query
+  // تعيين النص التلميحي حسب اللغة
+  const placeholderText = currentLanguage?.code === 'en' 
+    ? "Search for medication or active ingredient..." 
+    : "ابحث عن دواء أو مادة فعالة...";
+
+  // توليد الاقتراحات بناءً على الاستعلام الحالي
   useEffect(() => {
     if (query.length < 2) {
       setSuggestions([]);
       return;
     }
 
-    const normalizedQuery = query.trim().toLowerCase();
-    
-    // Generate unique list of drug names and active ingredients for suggestions
-    const drugNames = new Set<string>();
-    const activeIngredients = new Set<string>();
-    
-    mockDrugs.forEach(drug => {
-      if (drug.name.toLowerCase().includes(normalizedQuery)) {
-        drugNames.add(drug.name);
-      }
-      if (drug.activeIngredient.toLowerCase().includes(normalizedQuery)) {
-        activeIngredients.add(drug.activeIngredient);
-      }
-      
-      // Also check alternatives
-      drug.alternatives.forEach(alt => {
-        if (alt.name.toLowerCase().includes(normalizedQuery)) {
-          drugNames.add(alt.name);
-        }
-        if (alt.activeIngredient.toLowerCase().includes(normalizedQuery)) {
-          activeIngredients.add(alt.activeIngredient);
-        }
-      });
-    });
-    
-    // Combine and limit suggestions
-    const combinedSuggestions = [
-      ...Array.from(drugNames).map(name => ({ name, type: 'drug' as const })),
-      ...Array.from(activeIngredients).map(name => ({ name, type: 'ingredient' as const }))
-    ].slice(0, 7); // Limit to 7 suggestions
-    
-    setSuggestions(combinedSuggestions);
-    setShowSuggestions(true);
+    // استخدام الدالة المحسنة للبحث عن الاقتراحات
+    const suggestionsResult = searchDrugSuggestions(query);
+    setSuggestions(suggestionsResult);
+    setShowSuggestions(suggestionsResult.length > 0);
   }, [query]);
 
-  // Close suggestions when clicking outside
+  // إغلاق الاقتراحات عند النقر خارج حقل البحث
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -95,6 +72,12 @@ export default function SearchBar({ onSearch, placeholder = "ابحث عن دو�
     }
   };
 
+  // النصوص حسب اللغة
+  const translations = {
+    drug: currentLanguage?.code === 'en' ? 'Medication' : 'دواء',
+    ingredient: currentLanguage?.code === 'en' ? 'Active Ingredient' : 'مادة فعالة',
+  };
+
   return (
     <div className="w-full max-w-3xl mx-auto relative">
       <form onSubmit={handleSubmit} className="relative">
@@ -105,16 +88,16 @@ export default function SearchBar({ onSearch, placeholder = "ابحث عن دو�
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => {
             setIsFocused(true);
-            if (query.length >= 2) {
+            if (query.length >= 2 && suggestions.length > 0) {
               setShowSuggestions(true);
             }
           }}
           onBlur={() => setIsFocused(false)}
-          placeholder={placeholder}
+          placeholder={placeholder || placeholderText}
           className={`search-input pr-12 ${
             isFocused ? "ring-2 ring-pharma-primary/20 shadow-lg" : ""
           }`}
-          dir="rtl"
+          dir={currentLanguage?.direction || "rtl"}
         />
         <button
           type="submit"
@@ -125,12 +108,12 @@ export default function SearchBar({ onSearch, placeholder = "ابحث عن دو�
         </button>
       </form>
 
-      {/* Suggestions dropdown */}
+      {/* قائمة الاقتراحات */}
       {showSuggestions && suggestions.length > 0 && (
         <div 
           ref={suggestionsRef}
           className="absolute z-10 mt-1 w-full bg-white rounded-md shadow-lg max-h-60 overflow-auto border border-gray-200"
-          dir="rtl"
+          dir={currentLanguage?.direction || "rtl"}
         >
           <ul className="py-1">
             {suggestions.map((suggestion, index) => (
@@ -145,7 +128,7 @@ export default function SearchBar({ onSearch, placeholder = "ابحث عن دو�
                   ? 'bg-pharma-primary/10 text-pharma-primary' 
                   : 'bg-pharma-accent/10 text-pharma-accent'
                 }`}>
-                  {suggestion.type === 'drug' ? 'دواء' : 'مادة فعالة'}
+                  {suggestion.type === 'drug' ? translations.drug : translations.ingredient}
                 </span>
               </li>
             ))}
