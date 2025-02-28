@@ -11,6 +11,7 @@ import { psychotropics } from "./drugs/psychotropics";
 import { hormones } from "./drugs/hormones";
 import { specialMedications } from "./drugs/specialMedications";
 import { altibbiMedications } from "./drugs/altibbiMedications";
+import { webTebMedications } from "./drugs/webTebMedications";
 
 // تجميع كل الأدوية من جميع الفئات في مصفوفة واحدة
 export const mockDrugs: Drug[] = [
@@ -24,5 +25,6 @@ export const mockDrugs: Drug[] = [
   ...psychotropics,
   ...hormones,
   ...specialMedications,
-  ...altibbiMedications
+  ...altibbiMedications,
+  ...webTebMedications
 ];

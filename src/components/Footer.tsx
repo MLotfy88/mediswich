@@ -7,7 +7,7 @@ export default function Footer() {
     <footer className="bg-pharma-primary text-white pt-16 pb-8">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-          <div>
+          <div className="flex flex-col items-center md:items-start">
             <MediSwitchLogo size="lg" variant="footer" />
             <p className="text-white/70 mb-6 mt-4" dir="rtl">
               منصة مُتكاملة للبحث عن بدائل الأدوية على مستوى العالم، مع تركيز خاص على السوق المصري.
