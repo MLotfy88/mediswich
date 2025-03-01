@@ -1,7 +1,7 @@
 
-import { useState, useEffect } from "react";
-import { Drug, FilterOptions, AppLanguage } from "@/types";
-import { searchDrugs, getAllDrugs } from "@/services/drugService";
+import { useState, useEffect, useContext } from "react";
+import { Drug, FilterOptions } from "@/types";
+import { searchDrugs, getAllDrugs, translateDrugToEnglish } from "@/services/drugService";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import SearchBar from "@/components/SearchBar";
@@ -9,8 +9,10 @@ import FilterPanel from "@/components/FilterPanel";
 import SearchResults from "@/components/SearchResults";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
+import { LanguageContext } from "@/App";
 
 const Index = () => {
+  const { language, setLanguage } = useContext(LanguageContext);
   const [searchResults, setSearchResults] = useState<Drug[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
@@ -23,7 +25,6 @@ const Index = () => {
   });
   const [isSearching, setIsSearching] = useState(false);
   const [featuredDrugs, setFeaturedDrugs] = useState<Drug[]>([]);
-  const [appLanguage, setAppLanguage] = useState<AppLanguage>({ code: 'ar', direction: 'rtl' });
   const [resultsVisible, setResultsVisible] = useState(false);
   const { toast } = useToast();
 
@@ -35,8 +36,14 @@ const Index = () => {
       .sort(() => 0.5 - Math.random())
       .slice(0, 6);
     
-    setFeaturedDrugs(randomDrugs);
-  }, []);
+    // Translate drugs if language is English
+    if (language.code === 'en') {
+      const translatedDrugs = randomDrugs.map(drug => translateDrugToEnglish(drug));
+      setFeaturedDrugs(translatedDrugs);
+    } else {
+      setFeaturedDrugs(randomDrugs);
+    }
+  }, [language]);
 
   const handleSearch = (query: string) => {
     setIsSearching(true);
@@ -47,22 +54,28 @@ const Index = () => {
     
     // Simulate loading delay
     setTimeout(() => {
-      const results = searchDrugs(query);
-      setSearchResults(results);
+      const results = searchDrugs(query, language.code);
+      
+      // Translate results if language is English
+      const finalResults = language.code === 'en' 
+        ? results.map(drug => translateDrugToEnglish(drug))
+        : results;
+      
+      setSearchResults(finalResults);
       setIsSearching(false);
       
       // Show toast for search results
-      if (results.length > 0) {
+      if (finalResults.length > 0) {
         toast({
-          title: appLanguage.code === 'ar' ? "تم العثور على نتائج" : "Results found",
-          description: appLanguage.code === 'ar' 
-            ? `تم العثور على ${results.length} نتيجة لـ "${query}"`
-            : `Found ${results.length} results for "${query}"`,
+          title: language.code === 'ar' ? "تم العثور على نتائج" : "Results found",
+          description: language.code === 'ar' 
+            ? `تم العثور على ${finalResults.length} نتيجة لـ "${query}"`
+            : `Found ${finalResults.length} results for "${query}"`,
         });
       } else {
         toast({
-          title: appLanguage.code === 'ar' ? "لا توجد نتائج" : "No results",
-          description: appLanguage.code === 'ar' 
+          title: language.code === 'ar' ? "لا توجد نتائج" : "No results",
+          description: language.code === 'ar' 
             ? `لم يتم العثور على نتائج لـ "${query}"`
             : `No results found for "${query}"`,
           variant: "destructive",
@@ -71,38 +84,62 @@ const Index = () => {
     }, 500);
   };
 
-  const handleLanguageChange = (language: AppLanguage) => {
-    setAppLanguage(language);
-    document.documentElement.dir = language.direction;
+  const handleLanguageChange = (newLanguage) => {
+    setLanguage(newLanguage);
+    
+    // Translate search results if they exist
+    if (searchResults.length > 0) {
+      if (newLanguage.code === 'en') {
+        const translatedResults = searchResults.map(drug => translateDrugToEnglish(drug));
+        setSearchResults(translatedResults);
+      } else {
+        // Re-search with the original query to get Arabic results
+        const results = searchDrugs(searchQuery, 'ar');
+        setSearchResults(results);
+      }
+    }
+    
+    // Translate featured drugs
+    const allDrugs = getAllDrugs();
+    const randomDrugs = [...allDrugs]
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 6);
+    
+    if (newLanguage.code === 'en') {
+      const translatedDrugs = randomDrugs.map(drug => translateDrugToEnglish(drug));
+      setFeaturedDrugs(translatedDrugs);
+    } else {
+      setFeaturedDrugs(randomDrugs);
+    }
     
     // You would typically load translations here if using a translation library
     toast({
-      title: language.code === 'ar' ? "تم تغيير اللغة" : "Language Changed",
-      description: language.code === 'ar' ? "تم التبديل إلى اللغة العربية" : "Switched to English language",
+      title: newLanguage.code === 'ar' ? "تم تغيير اللغة" : "Language Changed",
+      description: newLanguage.code === 'ar' ? "تم التبديل إلى اللغة العربية" : "Switched to English language",
     });
   };
 
   return (
-    <div className="min-h-screen flex flex-col" dir={appLanguage.direction}>
-      <Header onLanguageChange={handleLanguageChange} currentLanguage={appLanguage} />
+    <div className="min-h-screen flex flex-col" dir={language.direction}>
+      <Header onLanguageChange={handleLanguageChange} />
       
       <main className="flex-grow">
-        <Hero appLanguage={appLanguage} />
+        <Hero appLanguage={language} />
         
         <section className="py-16 bg-pharma-secondary">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center mb-12">
               <h2 
                 className="text-3xl font-bold text-pharma-primary mb-4"
-                dir={appLanguage.direction}
+                dir={language.direction}
               >
-                {appLanguage.code === 'ar' ? 'ابحث عن دوائك الآن' : 'Search for your medication now'}
+                {language.code === 'ar' ? 'ابحث عن دوائك الآن' : 'Search for your medication now'}
               </h2>
               <p 
                 className="text-gray-600"
-                dir={appLanguage.direction}
+                dir={language.direction}
               >
-                {appLanguage.code === 'ar' 
+                {language.code === 'ar' 
                   ? 'أدخل اسم الدواء للبحث عن البدائل المتاحة وأسعارها في السوق المصري والعالمي' 
                   : 'Enter medication name to search for available alternatives and prices in Egyptian and global markets'}
               </p>
@@ -110,14 +147,13 @@ const Index = () => {
             
             <SearchBar 
               onSearch={handleSearch} 
-              placeholder={appLanguage.code === 'ar' ? 'ابحث عن دواء...' : 'Search for medication...'}
-              currentLanguage={appLanguage}
+              placeholder={language.code === 'ar' ? 'ابحث عن دواء...' : 'Search for medication...'}
             />
             
             {(resultsVisible || searchQuery) && (
               <div className="mt-12 grid grid-cols-1 lg:grid-cols-4 gap-8">
                 <div className="lg:col-span-1">
-                  <FilterPanel onFilterChange={setFilterOptions} currentLanguage={appLanguage} />
+                  <FilterPanel onFilterChange={setFilterOptions} currentLanguage={language} />
                 </div>
                 
                 <div className="lg:col-span-3">
@@ -131,7 +167,7 @@ const Index = () => {
                       filterOptions={filterOptions} 
                       searchQuery={searchQuery}
                       isVisible={resultsVisible}
-                      currentLanguage={appLanguage}
+                      currentLanguage={language}
                     />
                   )}
                 </div>
@@ -143,16 +179,16 @@ const Index = () => {
               <div className="mt-16">
                 <h2 
                   className="text-2xl font-bold text-pharma-primary mb-8 text-center"
-                  dir={appLanguage.direction}
+                  dir={language.direction}
                 >
-                  {appLanguage.code === 'ar' ? 'أدوية شائعة' : 'Common Medications'}
+                  {language.code === 'ar' ? 'أدوية شائعة' : 'Common Medications'}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
                   {featuredDrugs.map((drug) => (
                     <div 
                       key={drug.id}
                       className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer"
-                      dir={appLanguage.direction}
+                      dir={language.direction}
                       onClick={() => {
                         setSearchQuery(drug.name);
                         handleSearch(drug.name);
@@ -165,16 +201,16 @@ const Index = () => {
                         {drug.company} - {drug.country}
                       </p>
                       <p className="text-pharma-accent font-medium mt-2">
-                        {drug.price} {appLanguage.code === 'ar' ? 'جنيه' : 'EGP'}
+                        {drug.price} {language.code === 'ar' ? 'جنيه' : 'EGP'}
                       </p>
                       <div className="flex justify-between items-center mt-2">
                         <p className="text-xs text-gray-400">
-                          {appLanguage.code === 'ar' ? 'اضغط للبحث عن البدائل' : 'Click to find alternatives'}
+                          {language.code === 'ar' ? 'اضغط للبحث عن البدائل' : 'Click to find alternatives'}
                         </p>
                         <span className={`text-xs ${drug.isAvailable ? "text-pharma-save" : "text-red-500"}`}>
                           {drug.isAvailable 
-                            ? (appLanguage.code === 'ar' ? 'متوفر' : 'Available') 
-                            : (appLanguage.code === 'ar' ? 'غير متوفر' : 'Unavailable')}
+                            ? (language.code === 'ar' ? 'متوفر' : 'Available') 
+                            : (language.code === 'ar' ? 'غير متوفر' : 'Unavailable')}
                         </span>
                       </div>
                     </div>
@@ -190,17 +226,17 @@ const Index = () => {
             <div className="max-w-3xl mx-auto text-center mb-16">
               <h2 
                 className="text-3xl font-bold text-pharma-primary mb-4"
-                dir={appLanguage.direction}
+                dir={language.direction}
               >
-                {appLanguage.code === 'ar' 
+                {language.code === 'ar' 
                   ? 'لماذا تستخدم MediSwitch؟' 
                   : 'Why use MediSwitch?'}
               </h2>
               <p 
                 className="text-gray-600"
-                dir={appLanguage.direction}
+                dir={language.direction}
               >
-                {appLanguage.code === 'ar' 
+                {language.code === 'ar' 
                   ? 'نوفر لك أسهل طريقة للعثور على بدائل للأدوية بأسعار مناسبة مع التركيز على جودة المنتج' 
                   : 'We provide the easiest way to find medication alternatives at reasonable prices with a focus on product quality'}
               </p>
@@ -215,15 +251,15 @@ const Index = () => {
                 </div>
                 <h3 
                   className="text-xl font-semibold mb-3 text-pharma-primary"
-                  dir={appLanguage.direction}
+                  dir={language.direction}
                 >
-                  {appLanguage.code === 'ar' ? 'بدائل متعددة' : 'Multiple Alternatives'}
+                  {language.code === 'ar' ? 'بدائل متعددة' : 'Multiple Alternatives'}
                 </h3>
                 <p 
                   className="text-gray-600"
-                  dir={appLanguage.direction}
+                  dir={language.direction}
                 >
-                  {appLanguage.code === 'ar' 
+                  {language.code === 'ar' 
                     ? 'نوفر قائمة شاملة من البدائل لكل دواء بناءً على المادة الفعالة والتركيبة الدوائية' 
                     : 'We provide a comprehensive list of alternatives for each medication based on active ingredients and pharmaceutical composition'}
                 </p>
@@ -237,15 +273,15 @@ const Index = () => {
                 </div>
                 <h3 
                   className="text-xl font-semibold mb-3 text-pharma-primary"
-                  dir={appLanguage.direction}
+                  dir={language.direction}
                 >
-                  {appLanguage.code === 'ar' ? 'توفير المال' : 'Save Money'}
+                  {language.code === 'ar' ? 'توفير المال' : 'Save Money'}
                 </h3>
                 <p 
                   className="text-gray-600"
-                  dir={appLanguage.direction}
+                  dir={language.direction}
                 >
-                  {appLanguage.code === 'ar' 
+                  {language.code === 'ar' 
                     ? 'اعثر على بدائل أقل تكلفة ومنتجة محلياً بنفس الجودة وبأسعار أفضل' 
                     : 'Find lower-cost, locally produced alternatives with the same quality at better prices'}
                 </p>
@@ -259,15 +295,15 @@ const Index = () => {
                 </div>
                 <h3 
                   className="text-xl font-semibold mb-3 text-pharma-primary"
-                  dir={appLanguage.direction}
+                  dir={language.direction}
                 >
-                  {appLanguage.code === 'ar' ? 'جودة موثوقة' : 'Reliable Quality'}
+                  {language.code === 'ar' ? 'جودة موثوقة' : 'Reliable Quality'}
                 </h3>
                 <p 
                   className="text-gray-600"
-                  dir={appLanguage.direction}
+                  dir={language.direction}
                 >
-                  {appLanguage.code === 'ar' 
+                  {language.code === 'ar' 
                     ? 'نقدم معلومات عن الأدوية المعتمدة من هيئة الدواء المصرية والهيئات الدولية' 
                     : 'We provide information about medications approved by the Egyptian Drug Authority and international agencies'}
                 </p>
@@ -277,7 +313,7 @@ const Index = () => {
         </section>
       </main>
       
-      <Footer currentLanguage={appLanguage} />
+      <Footer currentLanguage={language} />
     </div>
   );
 };

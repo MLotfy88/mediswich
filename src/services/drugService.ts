@@ -1,352 +1,110 @@
 
-import { Drug } from "@/types";
-import { mockDrugs } from "@/data/mockDrugs";
+import { Drug, FilterOptions } from "@/types";
+import { mockDrugs, englishTranslations } from "@/data/mockDrugs";
 
-// البحث عن الأدوية باللغتين العربية والإنجليزية
-export const searchDrugs = (query: string): Drug[] => {
-  if (!query.trim()) return [];
-  
-  console.log("Searching for:", query);
-  
-  const normalizedQuery = query.trim().toLowerCase();
-  
-  // قاموس ترجمة الأسماء الشائعة بين الإنجليزية والعربية
-  const englishToArabic: Record<string, string> = {
-    "paracetamol": "باراسيتامول",
-    "amoxicillin": "أموكسيسيللين",
-    "omeprazole": "أوميبرازول",
-    "lisinopril": "ليزينوبريل",
-    "citalopram": "سيتالوبرام",
-    "atorvastatin": "أتورفاستاتين",
-    "metformin": "ميتفورمين",
-    "loratadine": "لوراتادين",
-    "amlodipine": "أملوديبين",
-    "azithromycin": "أزيثروميسين",
-    "diclofenac": "ديكلوفيناك",
-    "fluoxetine": "فلوكستين",
-    "mebeverine": "ميبيفيرين",
-    "ciprofloxacin": "سيبروفلوكساسين",
-    "simvastatin": "سيمفاستاتين",
-    "doxycycline": "دوكسيسيكلين",
-    "cetirizine": "سيتيريزين",
-    "chlorpheniramine": "كلورفينيرامين",
-    "ibuprofen": "إيبوبروفين",
-    "ranitidine": "رانيتيدين",
-    "dimra": "ديمرا",
-    "insulin": "إنسولين",
-    "levitra": "ليفيترا",
-    "concor": "كونكور",
-    "xanax": "زاناكس",
-    "augmentin": "أوجمنتين",
-    "nexium": "نيكسيوم",
-    "viagra": "فياجرا",
-    "voltaren": "فولتارين",
-    "lipitor": "ليبيتور",
-    "claritine": "كلاريتين",
-    "norvasc": "نورفاسك",
-    "yasmin": "ياسمين",
-    "zantac": "زانتاك",
-    "advil": "أديفيل",
-    "betadine": "بيتادين",
-    "brufen": "بروفين",
-    "panadol": "بنادول",
-    "duphaston": "دوفاستون",
-    "tamiflu": "تاميفلو",
-    "telfast": "تلفاست",
-    "daflon": "دافلون",
-    "actifed": "آكتيفيد",
-    "actos": "أكتوس",
-    "aldactone": "أداكتون",
-    "intal": "إنتال",
-    "bupropion": "بوبروبيون",
-    "warfarin": "وارفارين",
-    "digoxin": "ديجوكسين",
-    "furosemide": "فوروسيميد",
-    "captopril": "كابتوبريل",
-    "enalapril": "إينالابريل",
-    "ramipril": "راميبريل",
-    "valsartan": "فالسارتان",
-    "losartan": "لوسارتان",
-    "propranolol": "بروبرانولول",
-    "atenolol": "أتينولول",
-    "bisoprolol": "بيسوبرولول",
-    "hydrochlorothiazide": "هيدروكلوروثيازيد",
-    "spironolactone": "سبيرونولاكتون",
-    "amiodarone": "أميودارون",
-    "rosuvastatin": "روسوفاستاتين",
-    "fenofibrate": "فينوفيبرات",
-    "aspirin": "أسبرين",
-    "clopidogrel": "كلوبيدوجريل",
-    "rivaroxaban": "ريفاروكسابان",
-    "heparin": "هيبارين",
-    "gliclazide": "جليكلازيد",
-    "glimepiride": "جليميبيريد",
-    "levothyroxine": "ليفوثيروكسين",
-    "carbimazole": "كاربيمازول",
-    "prednisolone": "بريدنيزولون",
-    "hydrocortisone": "هيدروكورتيزون",
-    "methotrexate": "ميثوتريكسات",
-    "azathioprine": "أزاثيوبرين",
-    "hydroxychloroquine": "هيدروكسي كلوروكوين",
-    "sulfasalazine": "سلفاسالازين",
-    "penicillin": "بنسلين",
-    "ampicillin": "أمبيسيلين",
-    "flucloxacillin": "فلوكلوكساسيلين",
-    "cefalexin": "سيفاليكسين",
-    "cefuroxime": "سيفوروكسيم",
-    "ceftriaxone": "سيفترياكسون",
-    "levofloxacin": "ليفوفلوكساسين",
-    "moxifloxacin": "موكسيفلوكساسين",
-    "clarithromycin": "كلاريثروميسين",
-    "erythromycin": "إريثروميسين",
-    "tetracycline": "تتراسيكلين",
-    "metronidazole": "ميترونيدازول",
-    "nitrofurantoin": "نيتروفورانتوين",
-    "fluconazole": "فلوكونازول",
-    "aciclovir": "أسيكلوفير",
-    "lansoprazole": "لانسوبرازول",
-    "esomeprazole": "إيزوميبرازول",
-    "pantoprazole": "بانتوبرازول",
-    "domperidone": "دومبيريدون",
-    "loperamide": "لوبيراميد",
-    "hyoscine": "هيوسين",
-    "diazepam": "ديازيبام",
-    "lorazepam": "لورازيبام",
-    "alprazolam": "ألبرازولام",
-    "zopiclone": "زوبيكلون",
-    "zolpidem": "زولبيديم",
-    "amitriptyline": "أميتريبتيلين",
-    "sertraline": "سيرترالين",
-    "paroxetine": "باروكستين",
-    "olanzapine": "أولانزابين",
-    "risperidone": "ريسبيريدون",
-    "haloperidol": "هالوبيريدول",
-    "levodopa": "ليفودوبا",
-    "carbidopa": "كاربيدوبا",
-    "gabapentin": "جابابنتين",
-    "pregabalin": "بريجابالين",
-    "carbamazepine": "كاربامازيبين",
-    "phenytoin": "فينيتوين",
-    "sodium valproate": "صوديوم فالبروات",
-    "lamotrigine": "لاموتريجين",
-    "salbutamol": "سالبوتامول",
-    "ventolin": "فينتولين",
-    "symbicort": "سيمبيكورت",
-    "seretide": "سيريتايد",
-    "budesonide": "بوديزونيد",
-    "fluticasone": "فلوتيكازون",
-    "montelukast": "مونتيلوكاست",
-    "fexofenadine": "فيكسوفينادين",
-    "chlorphenamine": "كلورفينامين",
-    "allopurinol": "ألوبيورينول",
-    "colchicine": "كولشيسين",
-    "tamsulosin": "تامسولوسين",
-    "finasteride": "فيناستيرايد",
-    "sildenafil": "سيلدينافيل",
-    "tadalafil": "تادالافيل"
-  };
-  
-  // إنشاء قاموس عكسي من العربية إلى الإنجليزية
-  const arabicToEnglish: Record<string, string> = {};
-  Object.entries(englishToArabic).forEach(([eng, ar]) => {
-    arabicToEnglish[ar] = eng;
-  });
-  
-  // البحث في الأدوية
-  const results = mockDrugs.filter(drug => {
-    // البحث في اسم الدواء
-    const nameMatch = drug.name.toLowerCase().includes(normalizedQuery);
-    
-    // البحث في الشركة المصنعة
-    const companyMatch = drug.company.toLowerCase().includes(normalizedQuery);
-    
-    // البحث في المادة الفعالة
-    const activeIngredientMatch = drug.activeIngredient.toLowerCase().includes(normalizedQuery);
-    
-    // البحث في الترجمات
-    let translatedMatch = false;
-    
-    // البحث بالإنجليزية والترجمة للعربية
-    for (const [engTerm, arTerm] of Object.entries(englishToArabic)) {
-      if (engTerm.includes(normalizedQuery) || normalizedQuery.includes(engTerm)) {
-        if (drug.name.toLowerCase().includes(arTerm.toLowerCase()) || 
-            drug.activeIngredient.toLowerCase().includes(arTerm.toLowerCase())) {
-          translatedMatch = true;
-          break;
-        }
-      }
-    }
-    
-    // البحث بالعربية والترجمة للإنجليزية
-    if (!translatedMatch) {
-      for (const [arTerm, engTerm] of Object.entries(arabicToEnglish)) {
-        if (arTerm.includes(normalizedQuery) || normalizedQuery.includes(arTerm)) {
-          if (drug.name.toLowerCase().includes(engTerm.toLowerCase()) || 
-              drug.activeIngredient.toLowerCase().includes(engTerm.toLowerCase())) {
-            translatedMatch = true;
-            break;
-          }
-        }
-      }
-    }
-    
-    // البحث في البدائل
-    const alternativesMatch = drug.alternatives.some(alt => 
-      alt.name.toLowerCase().includes(normalizedQuery) || 
-      alt.company.toLowerCase().includes(normalizedQuery) ||
-      alt.activeIngredient.toLowerCase().includes(normalizedQuery)
-    );
-    
-    return nameMatch || companyMatch || activeIngredientMatch || translatedMatch || alternativesMatch;
-  });
-  
-  console.log("Search results:", results.length);
-  return results;
+// Get all drugs
+export const getAllDrugs = () => {
+  return mockDrugs;
 };
 
-// البحث عن اقتراحات للأدوية والمواد الفعالة بناءً على مدخلات المستخدم
-export const searchDrugSuggestions = (query: string): {name: string, type: 'drug' | 'ingredient'}[] => {
-  if (query.length < 2) return [];
+// Search for drugs by name
+export const searchDrugs = (query: string, language: string = 'ar'): Drug[] => {
+  if (!query || query.trim() === "") {
+    return [];
+  }
+
+  const normalizedQuery = query.toLowerCase().trim();
   
-  const normalizedQuery = query.trim().toLowerCase();
-  
-  // نسخة مصغرة من القاموس للاقتراحات
-  const englishToArabic: Record<string, string> = {
-    "paracetamol": "باراسيتامول",
-    "amoxicillin": "أموكسيسيللين",
-    "omeprazole": "أوميبرازول",
-    "lisinopril": "ليزينوبريل",
-    "metformin": "ميتفورمين"
-  };
-  
-  // إنشاء قاموس عكسي من العربية إلى الإنجليزية
-  const arabicToEnglish: Record<string, string> = {};
-  Object.entries(englishToArabic).forEach(([eng, ar]) => {
-    arabicToEnglish[ar] = eng;
-  });
-  
-  // مجموعات للاقتراحات الفريدة
-  const drugNames = new Set<string>();
-  const activeIngredients = new Set<string>();
-  
-  // البحث في الأدوية
-  mockDrugs.forEach(drug => {
-    // البحث المباشر
-    if (drug.name.toLowerCase().includes(normalizedQuery)) {
-      drugNames.add(drug.name);
-    }
-    if (drug.activeIngredient.toLowerCase().includes(normalizedQuery)) {
-      activeIngredients.add(drug.activeIngredient);
+  return mockDrugs.filter((drug) => {
+    const drugName = drug.name.toLowerCase();
+    
+    // For English language, check English translations
+    if (language === 'en') {
+      const translatedName = getEnglishName(drug.name) || '';
+      return translatedName.toLowerCase().includes(normalizedQuery);
     }
     
-    // البحث في البدائل
-    drug.alternatives.forEach(alt => {
-      if (alt.name.toLowerCase().includes(normalizedQuery)) {
-        drugNames.add(alt.name);
+    // Default to Arabic search
+    return drugName.includes(normalizedQuery);
+  });
+};
+
+// Get drug suggestions based on partial name
+export const getDrugSuggestions = (partialName: string, language: string = 'ar'): { id: string; name: string; nameInOtherLanguage?: string }[] => {
+  if (!partialName || partialName.trim() === "") {
+    return [];
+  }
+
+  const normalizedPartialName = partialName.toLowerCase().trim();
+  
+  const suggestions = mockDrugs
+    .filter((drug) => {
+      if (language === 'en') {
+        const translatedName = getEnglishName(drug.name) || '';
+        return translatedName.toLowerCase().includes(normalizedPartialName);
       }
-      if (alt.activeIngredient.toLowerCase().includes(normalizedQuery)) {
-        activeIngredients.add(alt.activeIngredient);
+      
+      return drug.name.toLowerCase().includes(normalizedPartialName);
+    })
+    .slice(0, 7) // Limit to 7 suggestions
+    .map((drug) => {
+      // Return bilingual names
+      if (language === 'en') {
+        return {
+          id: drug.id,
+          name: getEnglishName(drug.name) || drug.name,
+          nameInOtherLanguage: drug.name // Original Arabic name
+        };
+      } else {
+        return {
+          id: drug.id,
+          name: drug.name,
+          nameInOtherLanguage: getEnglishName(drug.name) // English translation
+        };
       }
     });
-    
-    // البحث في الترجمات
-    // البحث بالإنجليزية
-    for (const [engTerm, arTerm] of Object.entries(englishToArabic)) {
-      if (engTerm.includes(normalizedQuery) || normalizedQuery.includes(engTerm)) {
-        // البحث في اسم الدواء
-        if (drug.name.toLowerCase().includes(arTerm.toLowerCase())) {
-          drugNames.add(drug.name);
-        }
-        // البحث في المادة الفعالة
-        if (drug.activeIngredient.toLowerCase().includes(arTerm.toLowerCase())) {
-          activeIngredients.add(drug.activeIngredient);
-        }
-        // البحث في البدائل
-        drug.alternatives.forEach(alt => {
-          if (alt.name.toLowerCase().includes(arTerm.toLowerCase())) {
-            drugNames.add(alt.name);
-          }
-          if (alt.activeIngredient.toLowerCase().includes(arTerm.toLowerCase())) {
-            activeIngredients.add(alt.activeIngredient);
-          }
-        });
-      }
-    }
-    
-    // البحث بالعربية
-    for (const [arTerm, engTerm] of Object.entries(arabicToEnglish)) {
-      if (arTerm.includes(normalizedQuery) || normalizedQuery.includes(arTerm)) {
-        // البحث في اسم الدواء
-        if (drug.name.toLowerCase().includes(engTerm.toLowerCase())) {
-          drugNames.add(drug.name);
-        }
-        // البحث في المادة الفعالة
-        if (drug.activeIngredient.toLowerCase().includes(engTerm.toLowerCase())) {
-          activeIngredients.add(drug.activeIngredient);
-        }
-        // البحث في البدائل
-        drug.alternatives.forEach(alt => {
-          if (alt.name.toLowerCase().includes(engTerm.toLowerCase())) {
-            drugNames.add(alt.name);
-          }
-          if (alt.activeIngredient.toLowerCase().includes(engTerm.toLowerCase())) {
-            activeIngredients.add(alt.activeIngredient);
-          }
-        });
-      }
-    }
+
+  return suggestions;
+};
+
+// Get a drug by ID
+export const getDrugById = (id: string): Drug | undefined => {
+  return mockDrugs.find((drug) => drug.id === id);
+};
+
+// Get alternatives for a drug
+export const getDrugAlternatives = (drugId: string): Drug[] => {
+  const drug = getDrugById(drugId);
+  if (!drug || !drug.alternatives) {
+    return [];
+  }
+  
+  return drug.alternatives.map(alt => {
+    const fullDrug = getDrugById(alt.id);
+    return fullDrug || alt as Drug;
   });
-  
-  // دمج وتحديد الاقتراحات
-  const combinedSuggestions = [
-    ...Array.from(drugNames).map(name => ({ name, type: 'drug' as const })),
-    ...Array.from(activeIngredients).map(name => ({ name, type: 'ingredient' as const }))
-  ].slice(0, 7); // تحديد عدد الاقتراحات إلى 7
-  
-  return combinedSuggestions;
 };
 
-// حساب نسبة التوفير مقارنة بأغلى بديل
-export const calculateSavings = (drug: Drug): number => {
-  const allPrices = [drug.price, ...drug.alternatives.map(alt => alt.price)];
-  const maxPrice = Math.max(...allPrices);
-  
-  return maxPrice > drug.price 
-    ? Math.round(((maxPrice - drug.price) / maxPrice) * 100) 
-    : 0;
-};
-
-// وظيفة التصفية
-export const filterDrugs = (
-  drugs: Drug[], 
-  countryFilter: string | null, 
-  priceRange: { min: number | null; max: number | null },
-  availabilityFilter: string | null
-): Drug[] => {
-  return drugs.filter(drug => {
-    // تصفية حسب البلد
-    if (countryFilter && countryFilter !== "all") {
-      if (countryFilter === "egyptian" && !drug.isEgyptian) {
-        return false;
-      }
-      if (countryFilter === "international" && drug.isEgyptian) {
+// Filter drugs based on provided filter options
+export const filterDrugs = (drugs: Drug[], filterOptions: FilterOptions): Drug[] => {
+  return drugs.filter((drug) => {
+    // Country filter
+    if (filterOptions.country && drug.country !== filterOptions.country) {
+      return false;
+    }
+    
+    // Price range filter
+    if (filterOptions.priceRange) {
+      if (
+        (filterOptions.priceRange.min !== null && drug.price < filterOptions.priceRange.min) ||
+        (filterOptions.priceRange.max !== null && drug.price > filterOptions.priceRange.max)
+      ) {
         return false;
       }
     }
     
-    // تصفية حسب نطاق السعر
-    if (priceRange.min !== null && drug.price < priceRange.min) {
-      return false;
-    }
-    if (priceRange.max !== null && drug.price > priceRange.max) {
-      return false;
-    }
-    
-    // تصفية حسب التوفر
-    if (availabilityFilter === "available" && !drug.isAvailable) {
-      return false;
-    }
-    if (availabilityFilter === "unavailable" && drug.isAvailable) {
+    // Availability filter
+    if (filterOptions.availability !== null && drug.isAvailable !== filterOptions.availability) {
       return false;
     }
     
@@ -354,15 +112,67 @@ export const filterDrugs = (
   });
 };
 
-// استخراج جميع الأدوية للقوائم العامة
-export const getAllDrugs = (): Drug[] => {
-  return mockDrugs;
+// Get English translation of drug name
+export const getEnglishName = (arabicName: string): string | undefined => {
+  return englishTranslations[arabicName]?.name;
 };
 
-export default {
-  searchDrugs,
-  searchDrugSuggestions,
-  calculateSavings,
-  filterDrugs,
-  getAllDrugs
+// Get English translation of active ingredient
+export const getEnglishActiveIngredient = (arabicActiveIngredient: string): string | undefined => {
+  return englishTranslations[arabicActiveIngredient]?.activeIngredient;
+};
+
+// Translate drug object to English
+export const translateDrugToEnglish = (drug: Drug): Drug => {
+  const translatedDrug = { ...drug };
+  
+  // Translate drug name
+  translatedDrug.name = getEnglishName(drug.name) || drug.name;
+  
+  // Translate active ingredient
+  translatedDrug.activeIngredient = getEnglishActiveIngredient(drug.activeIngredient) || drug.activeIngredient;
+  
+  // Translate country if needed (could be added to translations)
+  
+  // Translate alternatives
+  if (drug.alternatives && drug.alternatives.length > 0) {
+    translatedDrug.alternatives = drug.alternatives.map(alt => {
+      const translatedAlt = { ...alt };
+      translatedAlt.name = getEnglishName(alt.name) || alt.name;
+      translatedAlt.activeIngredient = getEnglishActiveIngredient(alt.activeIngredient) || alt.activeIngredient;
+      return translatedAlt;
+    });
+  }
+  
+  return translatedDrug;
+};
+
+// Search all drug properties for a keyword
+export const searchAllDrugProperties = (query: string, language: string = 'ar'): Drug[] => {
+  if (!query || query.trim() === "") {
+    return [];
+  }
+
+  const normalizedQuery = query.toLowerCase().trim();
+  
+  return mockDrugs.filter((drug) => {
+    // For English language, check English translations
+    if (language === 'en') {
+      const translatedName = getEnglishName(drug.name) || '';
+      const translatedActiveIngredient = getEnglishActiveIngredient(drug.activeIngredient) || '';
+      
+      return (
+        translatedName.toLowerCase().includes(normalizedQuery) ||
+        translatedActiveIngredient.toLowerCase().includes(normalizedQuery) ||
+        drug.company.toLowerCase().includes(normalizedQuery)
+      );
+    }
+    
+    // For Arabic language
+    return (
+      drug.name.toLowerCase().includes(normalizedQuery) ||
+      drug.activeIngredient.toLowerCase().includes(normalizedQuery) ||
+      drug.company.toLowerCase().includes(normalizedQuery)
+    );
+  });
 };

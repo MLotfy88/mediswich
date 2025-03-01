@@ -1,100 +1,73 @@
 
-import { Search } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useContext } from "react";
 import { AppLanguage } from "@/types";
+import { LanguageContext } from "@/App";
 
 interface HeroProps {
   appLanguage?: AppLanguage;
 }
 
-export default function Hero({ appLanguage = { code: 'ar', direction: 'rtl' } }: HeroProps) {
-  // الترجمات حسب اللغة
-  const translations = {
-    title: appLanguage.code === 'ar' 
-      ? "المنصة الذكية الشاملة لإدارة الأدوية وتبديلها بذكاء!"
-      : "The Comprehensive Smart Platform for Medication Management and Intelligent Switching!",
-    description: appLanguage.code === 'ar'
-      ? "ابحث عن بدائل للأدوية، قارن الجرعات، واحسب الجرعات المناسبة حسب وزن المريض. تطبيق مصمم خصيصًا للأطباء والصيادلة في مصر والعالم."
-      : "Search for medication alternatives, compare dosages, and calculate appropriate doses based on patient weight. An application specially designed for doctors and pharmacists in Egypt and worldwide.",
-    searchByIngredient: appLanguage.code === 'ar' ? "بحث بالمادة الفعالة" : "Search by Active Ingredient",
-    dosageCalculator: appLanguage.code === 'ar' ? "حاسبة الجرعات" : "Dosage Calculator",
-    equivalentCalculator: appLanguage.code === 'ar' ? "مقارنة الأدوية" : "Compare Medications"
-  };
-
+const Hero = () => {
+  const { language } = useContext(LanguageContext);
+  
   return (
-    <div className="bg-gradient-to-b from-white to-pharma-secondary/20 min-h-screen pt-28 pb-16">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12 max-w-3xl mx-auto">
+    <section className="relative bg-gradient-to-r from-pharma-primary to-pharma-accent py-20 md:py-32 overflow-hidden">
+      {/* Background pattern decorations */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-white"></div>
+        <div className="absolute top-20 right-20 w-64 h-64 rounded-full bg-white"></div>
+        <div className="absolute bottom-10 left-1/3 w-40 h-40 rounded-full bg-white"></div>
+      </div>
+      
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="flex flex-col items-center text-white text-center">
           <h1 
-            className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4" 
-            dir={appLanguage.direction}
+            className="text-4xl md:text-5xl lg:text-6xl font-bold max-w-4xl leading-tight mb-6"
+            dir={language.direction}
           >
-            {translations.title}
+            {language.code === 'ar' 
+              ? 'اعثر على البديل المناسب لدوائك بسهولة'
+              : 'Find the Right Alternative for Your Medication Easily'}
           </h1>
+          
           <p 
-            className="text-lg text-gray-600 mb-8" 
-            dir={appLanguage.direction}
+            className="text-lg md:text-xl max-w-2xl mb-8 text-white/80"
+            dir={language.direction}
           >
-            {translations.description}
+            {language.code === 'ar' 
+              ? 'أداة ذكية لمساعدتك في العثور على بدائل الأدوية بأسعار مناسبة في مصر'
+              : 'Smart tool to help you find medication alternatives at reasonable prices in Egypt'}
           </p>
           
-          <div className="flex flex-wrap gap-4 justify-center mt-10">
-            <Link to="/" className="feature-btn">
-              <Search size={20} className={appLanguage.direction === 'rtl' ? "ml-2" : "mr-2"} />
-              <span>{translations.searchByIngredient}</span>
-            </Link>
-            <Link to="/calculator/dosage" className="feature-btn">
-              <span>{translations.dosageCalculator}</span>
-            </Link>
-            <Link to="/calculator/equivalent" className="feature-btn">
-              <span>{translations.equivalentCalculator}</span>
-            </Link>
+          <div className="flex flex-wrap justify-center gap-4">
+            <a 
+              href="#search"
+              className="bg-white text-pharma-primary hover:bg-white/90 px-6 py-3 rounded-full font-medium transition-colors"
+            >
+              {language.code === 'ar' ? 'ابدأ البحث' : 'Start Searching'}
+            </a>
+            <a 
+              href="/calculator/dosage"
+              className="bg-transparent border-2 border-white text-white hover:bg-white/10 px-6 py-3 rounded-full font-medium transition-colors"
+            >
+              {language.code === 'ar' ? 'حاسبة الجرعات' : 'Dosage Calculator'}
+            </a>
           </div>
-        </div>
-
-        {/* Data sources section */}
-        <div className="mt-16 bg-white p-8 rounded-xl shadow-sm border border-border">
-          <h2 className="text-2xl font-bold mb-6 text-center" dir={appLanguage.direction}>
-            {appLanguage.code === 'ar' ? 'قواعد البيانات المُدمجة' : 'Integrated Databases'}
-          </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-              <h3 className="text-xl font-bold mb-4 text-pharma-primary" dir={appLanguage.direction}>
-                {appLanguage.code === 'ar' ? 'مصادر مصرية' : 'Egyptian Sources'}
-              </h3>
-              <ul className="space-y-2 list-disc list-inside text-gray-600" dir={appLanguage.direction}>
-                <li>{appLanguage.code === 'ar' ? 'الهيئة المصرية للدواء (EDA)' : 'Egyptian Drug Authority (EDA)'}</li>
-                <li>{appLanguage.code === 'ar' ? 'الدواء المصري (EIP)' : 'Egyptian Pharmaceutical Index (EIP)'}</li>
-                <li>{appLanguage.code === 'ar' ? 'الإرشادات العلاجية لوزارة الصحة المصرية' : 'Ministry of Health Therapeutic Guidelines'}</li>
-                <li>{appLanguage.code === 'ar' ? 'قواعد بيانات المستشفيات الجامعية' : 'University Hospitals Databases'}</li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="text-xl font-bold mb-4 text-pharma-accent" dir={appLanguage.direction}>
-                {appLanguage.code === 'ar' ? 'مصادر عالمية' : 'Global Sources'}
-              </h3>
-              <ul className="space-y-2 list-disc list-inside text-gray-600" dir={appLanguage.direction}>
-                <li>{appLanguage.code === 'ar' ? 'قائمة منظمة الصحة العالمية (WHO EML)' : 'WHO Essential Medicines List (WHO EML)'}</li>
-                <li>Drugs.com {appLanguage.code === 'ar' ? 'و' : '&'} RxList</li>
-                <li>FDA Orange Book</li>
-                <li>Micromedex {appLanguage.code === 'ar' ? 'و' : '&'} UpToDate</li>
-                <li>PubMed {appLanguage.code === 'ar' ? 'و' : '&'} ClinicalTrials.gov</li>
-              </ul>
-            </div>
+          <div className="mt-12 md:mt-16 bg-white/10 backdrop-blur-sm py-4 px-6 rounded-xl">
+            <p 
+              className="text-white/90 text-sm md:text-base"
+              dir={language.direction}
+            >
+              {language.code === 'ar' 
+                ? '🔍 قاعدة بيانات تضم أكثر من 500 دواء وبديل متاح في مصر'
+                : '🔍 Database of over 500 medications and alternatives available in Egypt'}
+            </p>
           </div>
-        </div>
-
-        {/* Marketing tagline */}
-        <div className="mt-16 text-center">
-          <p className="text-xl md:text-2xl font-bold text-pharma-primary" dir={appLanguage.direction}>
-            {appLanguage.code === 'ar' 
-              ? 'MediSwitch – حيث الدقة الطبية تلتقي بالذكاء الاصطناعي لخدمة الطب المصري والعالمي! 🌍💊'
-              : 'MediSwitch – Where Medical Precision Meets Artificial Intelligence for Egyptian and Global Medicine! 🌍💊'}
-          </p>
         </div>
       </div>
-    </div>
+    </section>
   );
-}
+};
+
+export default Hero;

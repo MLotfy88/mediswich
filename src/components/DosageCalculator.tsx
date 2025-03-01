@@ -1,57 +1,66 @@
 
-import { useState, useEffect, useRef } from "react";
-import { DosageCalculation, AppLanguage } from "@/types";
-import { searchDrugSuggestions } from "@/services/drugService";
-import { v4 as uuidv4 } from "uuid";
+import { useState, useEffect, useRef, useContext } from "react";
+import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getDrugSuggestions } from "@/services/drugService";
+import { useToast } from "@/hooks/use-toast";
+import { LanguageContext } from "@/App";
 
-interface DosageCalculatorProps {
-  onCalculate?: (calculation: any) => void;
-  currentLanguage?: AppLanguage;
-}
+type DosageRecord = {
+  id: string;
+  drugName: string;
+  weight: number;
+  dosage: number;
+  date: Date;
+};
 
-export default function DosageCalculator({ onCalculate, currentLanguage }: DosageCalculatorProps) {
-  const [patientWeight, setPatientWeight] = useState<string>("");
-  const [weightUnit, setWeightUnit] = useState<"kg" | "lb">("kg");
-  const [drugName, setDrugName] = useState<string>("");
-  const [dosagePerKg, setDosagePerKg] = useState<string>("");
-  const [frequency, setFrequency] = useState<string>("1");
-  const [duration, setDuration] = useState<string>("7");
-  
-  const [calculatedResult, setCalculatedResult] = useState<{
-    singleDose: number;
-    dailyDose: number;
-    totalDose: number;
-    unit: string;
-  } | null>(null);
-  
-  const [error, setError] = useState<string | null>(null);
-
-  // للاقتراحات الدوائية
-  const [drugSuggestions, setDrugSuggestions] = useState<{name: string, type: 'drug' | 'ingredient'}[]>([]);
+const DosageCalculator = () => {
+  const { language } = useContext(LanguageContext);
+  const [drugName, setDrugName] = useState("");
+  const [suggestions, setSuggestions] = useState<Array<{ id: string; name: string; nameInOtherLanguage?: string }>>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const suggestionsRef = useRef<HTMLDivElement>(null);
+  const [weight, setWeight] = useState<number | "">("");
+  const [result, setResult] = useState<number | null>(null);
+  const [calculationHistory, setCalculationHistory] = useState<DosageRecord[]>([]);
+  const commandRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
-  // البحث عن اقتراحات الأدوية أثناء الكتابة
   useEffect(() => {
-    if (drugName.length < 2) {
-      setDrugSuggestions([]);
-      return;
+    // Load calculation history from local storage
+    const savedHistory = localStorage.getItem("dosageCalculationHistory");
+    if (savedHistory) {
+      try {
+        const parsedHistory = JSON.parse(savedHistory);
+        setCalculationHistory(parsedHistory.map((record: any) => ({
+          ...record,
+          date: new Date(record.date)
+        })));
+      } catch (error) {
+        console.error("Failed to parse history from localStorage", error);
+      }
     }
+  }, []);
 
-    const suggestions = searchDrugSuggestions(drugName);
-    setDrugSuggestions(suggestions);
-  }, [drugName]);
+  useEffect(() => {
+    if (drugName.trim()) {
+      const fetchSuggestions = async () => {
+        const suggestionResults = getDrugSuggestions(drugName, language.code);
+        setSuggestions(suggestionResults);
+      };
+      
+      fetchSuggestions();
+    } else {
+      setSuggestions([]);
+    }
+  }, [drugName, language.code]);
 
-  // إغلاق الاقتراحات عند النقر خارج حقل البحث
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        suggestionsRef.current && 
-        !suggestionsRef.current.contains(event.target as Node) &&
-        inputRef.current &&
-        !inputRef.current.contains(event.target as Node)
-      ) {
+      if (commandRef.current && !commandRef.current.contains(event.target as Node)) {
         setShowSuggestions(false);
       }
     };
@@ -62,323 +71,238 @@ export default function DosageCalculator({ onCalculate, currentLanguage }: Dosag
     };
   }, []);
 
-  const handleDrugSuggestionClick = (suggestion: string) => {
+  const calculateDosage = () => {
+    if (!drugName.trim()) {
+      toast({
+        title: language.code === 'ar' ? "خطأ" : "Error",
+        description: language.code === 'ar' 
+          ? "يرجى إدخال اسم الدواء" 
+          : "Please enter a medication name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (weight === "" || isNaN(Number(weight)) || Number(weight) <= 0) {
+      toast({
+        title: language.code === 'ar' ? "خطأ" : "Error",
+        description: language.code === 'ar' 
+          ? "يرجى إدخال وزن صحيح (بالكيلوجرام)" 
+          : "Please enter a valid weight (in kg)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Simple dosage calculation (for demonstration)
+    // In a real app, this would use more sophisticated formulas and drug-specific data
+    const weightNum = Number(weight);
+    const calculatedDosage = Math.round((weightNum * 0.5) * 10) / 10; // Just a sample calculation
+
+    setResult(calculatedDosage);
+
+    // Add to history
+    const newRecord: DosageRecord = {
+      id: Date.now().toString(),
+      drugName,
+      weight: weightNum,
+      dosage: calculatedDosage,
+      date: new Date()
+    };
+
+    const updatedHistory = [newRecord, ...calculationHistory].slice(0, 10); // Keep only the last 10 records
+    setCalculationHistory(updatedHistory);
+
+    // Save to local storage
+    localStorage.setItem("dosageCalculationHistory", JSON.stringify(updatedHistory));
+
+    toast({
+      title: language.code === 'ar' ? "تم الحساب" : "Calculation Complete",
+      description: language.code === 'ar' 
+        ? `الجرعة المحسوبة لـ "${drugName}" هي ${calculatedDosage} مجم` 
+        : `Calculated dosage for "${drugName}" is ${calculatedDosage} mg`,
+    });
+  };
+
+  const handleDrugNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setDrugName(value);
+    if (value.trim()) {
+      setShowSuggestions(true);
+    } else {
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
     setDrugName(suggestion);
     setShowSuggestions(false);
   };
-  
-  const calculateDosage = () => {
-    if (!patientWeight || !drugName || !dosagePerKg) {
-      setError(currentLanguage?.code === 'en' ? 
-        "Please enter all required data" : 
-        "يرجى إدخال جميع البيانات المطلوبة");
-      return;
-    }
-    
-    try {
-      // تحويل المدخلات إلى أرقام
-      const weightValue = parseFloat(patientWeight);
-      const dosageValue = parseFloat(dosagePerKg);
-      const frequencyValue = parseInt(frequency);
-      const durationValue = parseInt(duration);
-      
-      if (isNaN(weightValue) || isNaN(dosageValue) || isNaN(frequencyValue) || isNaN(durationValue)) {
-        throw new Error(currentLanguage?.code === 'en' ? 
-          "Make sure to enter valid numbers" : 
-          "تأكد من إدخال أرقام صحيحة");
-      }
-      
-      if (weightValue <= 0 || dosageValue <= 0 || frequencyValue <= 0 || durationValue <= 0) {
-        throw new Error(currentLanguage?.code === 'en' ? 
-          "All values must be positive" : 
-          "يجب أن تكون جميع القيم موجبة");
-      }
-      
-      // تحويل الوزن إلى كجم إذا لزم الأمر
-      const weightInKg = weightUnit === "lb" ? weightValue * 0.45359237 : weightValue;
-      
-      // حساب الجرعة
-      const singleDose = weightInKg * dosageValue;
-      const dailyDose = singleDose * frequencyValue;
-      const totalDose = dailyDose * durationValue;
-      
-      const result = {
-        singleDose: Math.round(singleDose * 100) / 100,
-        dailyDose: Math.round(dailyDose * 100) / 100,
-        totalDose: Math.round(totalDose * 100) / 100,
-        unit: "mg" // الوحدة الافتراضية، يمكن تعديلها لاحقًا
-      };
 
-      setCalculatedResult(result);
-      
-      // إضافة العملية إلى السجل إذا كانت الدالة موجودة
-      if (onCalculate) {
-        onCalculate({
-          id: uuidv4(),
-          drugName,
-          patientWeight: weightValue,
-          weightUnit,
-          dosagePerKg: dosageValue,
-          frequency: frequencyValue,
-          duration: durationValue,
-          singleDose: result.singleDose,
-          dailyDose: result.dailyDose,
-          totalDose: result.totalDose,
-          timestamp: new Date()
-        });
-      }
-      
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : currentLanguage?.code === 'en' ? 
-        "An error occurred during calculation" : 
-        "حدث خطأ أثناء الحساب");
-      setCalculatedResult(null);
-    }
-  };
-  
-  const resetCalculator = () => {
-    setPatientWeight("");
-    setWeightUnit("kg");
-    setDrugName("");
-    setDosagePerKg("");
-    setFrequency("1");
-    setDuration("7");
-    setCalculatedResult(null);
-    setError(null);
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat(language.code === 'ar' ? 'ar-EG' : 'en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
   };
 
-  // الترجمات حسب اللغة
-  const translations = {
-    title: currentLanguage?.code === 'en' ? 'Medication Dosage Calculator' : 'حاسبة جرعة الدواء',
-    patientWeight: currentLanguage?.code === 'en' ? 'Patient Weight' : 'وزن المريض',
-    drugName: currentLanguage?.code === 'en' ? 'Medication Name' : 'اسم الدواء',
-    enterDrugName: currentLanguage?.code === 'en' ? 'Enter medication name' : 'أدخل اسم الدواء',
-    dosagePerKg: currentLanguage?.code === 'en' ? 'Dosage per kilogram (mg/kg)' : 'الجرعة لكل كيلوجرام (مجم / كجم)',
-    frequencyDaily: currentLanguage?.code === 'en' ? 'Dosage frequency per day' : 'عدد مرات الجرعة يوميا',
-    once: currentLanguage?.code === 'en' ? 'Once daily' : 'مرة واحدة يوميا',
-    twice: currentLanguage?.code === 'en' ? 'Twice daily' : 'مرتين يوميا',
-    thrice: currentLanguage?.code === 'en' ? 'Three times daily' : 'ثلاث مرات يوميا',
-    fourTimes: currentLanguage?.code === 'en' ? 'Four times daily' : 'أربع مرات يوميا',
-    treatmentDuration: currentLanguage?.code === 'en' ? 'Treatment Duration (days)' : 'مدة العلاج (بالأيام)',
-    calculate: currentLanguage?.code === 'en' ? 'Calculate Dosage' : 'حساب الجرعة',
-    reset: currentLanguage?.code === 'en' ? 'Reset' : 'إعادة تعيين',
-    results: currentLanguage?.code === 'en' ? 'Calculation Results:' : 'نتائج الحساب:',
-    singleDose: currentLanguage?.code === 'en' ? 'Single Dose:' : 'الجرعة المفردة:',
-    dailyDose: currentLanguage?.code === 'en' ? 'Daily Dose:' : 'الجرعة اليومية:',
-    totalDose: currentLanguage?.code === 'en' ? 'Total Treatment Dose:' : 'الجرعة الإجمالية للفترة العلاجية:',
-    note: currentLanguage?.code === 'en' ? 'Note:' : 'ملاحظة:',
-    warning: currentLanguage?.code === 'en' ? 
-      'These results are for guidance only. Always consult the treating physician or pharmacist before taking any action.' :
-      'هذه النتائج استرشادية فقط. يرجى دائما مراجعة الطبيب المعالج أو الصيدلي قبل اتخاذ أي إجراء.',
-    kg: currentLanguage?.code === 'en' ? 'kg' : 'كجم',
-    lb: currentLanguage?.code === 'en' ? 'lb' : 'رطل'
-  };
-  
   return (
-    <div className="bg-white rounded-xl shadow-sm p-6 border border-border">
-      <h2 
-        className="text-xl font-bold mb-6 text-pharma-primary" 
-        dir={currentLanguage?.direction || "rtl"}
-      >
-        {translations.title}
-      </h2>
-      
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label 
-              htmlFor="patientWeight" 
-              className="block text-sm font-medium text-gray-700 mb-1" 
-              dir={currentLanguage?.direction || "rtl"}
-            >
-              {translations.patientWeight}
-            </label>
-            <div className="flex">
-              <input
-                id="patientWeight"
+    <Tabs defaultValue="calculator" className="w-full max-w-4xl mx-auto">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="calculator">
+          {language.code === 'ar' ? 'حاسبة الجرعات' : 'Dosage Calculator'}
+        </TabsTrigger>
+        <TabsTrigger value="history">
+          {language.code === 'ar' ? 'السجل' : 'History'}
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="calculator" className="pt-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>{language.code === 'ar' ? 'حاسبة جرعة الدواء' : 'Medication Dosage Calculator'}</CardTitle>
+            <CardDescription>
+              {language.code === 'ar'
+                ? 'أدخل اسم الدواء ووزن المريض لحساب الجرعة المناسبة'
+                : 'Enter medication name and patient weight to calculate the appropriate dosage'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="drugName">
+                {language.code === 'ar' ? 'اسم الدواء' : 'Medication Name'}
+              </Label>
+              <div ref={commandRef} className="relative">
+                <Input
+                  id="drugName"
+                  placeholder={language.code === 'ar' ? 'ادخل اسم الدواء' : 'Enter medication name'}
+                  value={drugName}
+                  onChange={handleDrugNameChange}
+                  onFocus={() => drugName.trim() && setShowSuggestions(true)}
+                  className="w-full"
+                  dir={language.direction}
+                />
+
+                {showSuggestions && suggestions.length > 0 && (
+                  <Command className="absolute top-full left-0 right-0 mt-1 rounded-lg border shadow-md bg-white z-50">
+                    <CommandList>
+                      <CommandGroup>
+                        {suggestions.map((suggestion) => (
+                          <CommandItem
+                            key={suggestion.id}
+                            onSelect={() => handleSuggestionClick(suggestion.name)}
+                            className="px-4 py-2 hover:bg-pharma-secondary cursor-pointer focus:bg-pharma-secondary"
+                          >
+                            <div className="flex flex-col w-full" dir={language.direction}>
+                              <span className="font-medium">{suggestion.name}</span>
+                              {suggestion.nameInOtherLanguage && (
+                                <span className="text-xs text-gray-500">
+                                  {suggestion.nameInOtherLanguage}
+                                </span>
+                              )}
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="weight">
+                {language.code === 'ar' ? 'وزن المريض (كجم)' : 'Patient Weight (kg)'}
+              </Label>
+              <Input
+                id="weight"
                 type="number"
-                value={patientWeight}
-                onChange={(e) => setPatientWeight(e.target.value)}
-                className="flex-1 rounded-l-md border border-gray-300 shadow-sm px-3 py-2 focus:outline-none focus:ring-pharma-primary focus:border-pharma-primary"
-                placeholder="0"
+                placeholder={language.code === 'ar' ? 'ادخل الوزن' : 'Enter weight'}
+                value={weight}
+                onChange={(e) => setWeight(e.target.value === "" ? "" : Number(e.target.value))}
+                className="w-full"
                 min="0"
                 step="0.1"
+                dir="ltr" // Numbers are always left-to-right
               />
-              <select
-                value={weightUnit}
-                onChange={(e) => setWeightUnit(e.target.value as "kg" | "lb")}
-                className="bg-gray-100 border border-gray-300 rounded-r-md px-2 py-2 focus:outline-none"
-              >
-                <option value="kg">{translations.kg}</option>
-                <option value="lb">{translations.lb}</option>
-              </select>
             </div>
-          </div>
-          
-          <div className="relative">
-            <label 
-              htmlFor="drugName" 
-              className="block text-sm font-medium text-gray-700 mb-1" 
-              dir={currentLanguage?.direction || "rtl"}
-            >
-              {translations.drugName}
-            </label>
-            <input
-              ref={inputRef}
-              id="drugName"
-              type="text"
-              value={drugName}
-              onChange={(e) => setDrugName(e.target.value)}
-              onFocus={() => drugSuggestions.length > 0 && setShowSuggestions(true)}
-              className="w-full rounded-md border border-gray-300 shadow-sm px-3 py-2 focus:outline-none focus:ring-pharma-primary focus:border-pharma-primary"
-              placeholder={translations.enterDrugName}
-            />
-            
-            {/* اقتراحات الأدوية */}
-            {showSuggestions && drugSuggestions.length > 0 && (
-              <div 
-                ref={suggestionsRef}
-                className="absolute z-10 mt-1 w-full bg-white rounded-md shadow-lg max-h-60 overflow-auto border border-gray-200"
-              >
-                <ul className="py-1">
-                  {drugSuggestions.map((suggestion, index) => (
-                    <li 
-                      key={index} 
-                      className="px-4 py-2 hover:bg-pharma-primary/10 cursor-pointer"
-                      onClick={() => handleDrugSuggestionClick(suggestion.name)}
-                    >
-                      {suggestion.name}
-                    </li>
-                  ))}
-                </ul>
+
+            {result !== null && (
+              <div className="p-4 bg-pharma-secondary/50 rounded-lg mt-4">
+                <p className="font-medium text-center" dir={language.direction}>
+                  {language.code === 'ar'
+                    ? `الجرعة المناسبة: ${result} مجم`
+                    : `Appropriate Dosage: ${result} mg`}
+                </p>
               </div>
             )}
-          </div>
-        </div>
-        
-        <div>
-          <label 
-            htmlFor="dosagePerKg" 
-            className="block text-sm font-medium text-gray-700 mb-1" 
-            dir={currentLanguage?.direction || "rtl"}
-          >
-            {translations.dosagePerKg}
-          </label>
-          <input
-            id="dosagePerKg"
-            type="number"
-            value={dosagePerKg}
-            onChange={(e) => setDosagePerKg(e.target.value)}
-            className="w-full rounded-md border border-gray-300 shadow-sm px-3 py-2 focus:outline-none focus:ring-pharma-primary focus:border-pharma-primary"
-            placeholder="0"
-            min="0"
-            step="0.1"
-          />
-        </div>
-        
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label 
-              htmlFor="frequency" 
-              className="block text-sm font-medium text-gray-700 mb-1" 
-              dir={currentLanguage?.direction || "rtl"}
+          </CardContent>
+          <CardFooter>
+            <Button 
+              onClick={calculateDosage} 
+              className="w-full"
             >
-              {translations.frequencyDaily}
-            </label>
-            <select
-              id="frequency"
-              value={frequency}
-              onChange={(e) => setFrequency(e.target.value)}
-              className="w-full rounded-md border border-gray-300 shadow-sm px-3 py-2 focus:outline-none focus:ring-pharma-primary focus:border-pharma-primary"
-              dir={currentLanguage?.direction || "rtl"}
-            >
-              <option value="1">{translations.once}</option>
-              <option value="2">{translations.twice}</option>
-              <option value="3">{translations.thrice}</option>
-              <option value="4">{translations.fourTimes}</option>
-            </select>
-          </div>
-          
-          <div>
-            <label 
-              htmlFor="duration" 
-              className="block text-sm font-medium text-gray-700 mb-1" 
-              dir={currentLanguage?.direction || "rtl"}
-            >
-              {translations.treatmentDuration}
-            </label>
-            <input
-              id="duration"
-              type="number"
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              className="w-full rounded-md border border-gray-300 shadow-sm px-3 py-2 focus:outline-none focus:ring-pharma-primary focus:border-pharma-primary"
-              placeholder="7"
-              min="1"
-            />
-          </div>
-        </div>
-        
-        <div className="flex space-x-4 pt-2">
-          <button
-            onClick={calculateDosage}
-            className="flex-1 bg-pharma-primary text-white py-2 px-4 rounded-md hover:bg-pharma-primary-dark transition-colors"
-          >
-            {translations.calculate}
-          </button>
-          <button
-            onClick={resetCalculator}
-            className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors"
-          >
-            {translations.reset}
-          </button>
-        </div>
-      </div>
-      
-      {error && (
-        <div 
-          className="mt-4 p-3 bg-red-100 text-red-700 rounded-md" 
-          dir={currentLanguage?.direction || "rtl"}
-        >
-          {error}
-        </div>
-      )}
-      
-      {calculatedResult && (
-        <div className="mt-6 p-4 border border-pharma-primary/20 rounded-md bg-pharma-primary/5">
-          <h3 
-            className="text-lg font-bold mb-3 text-pharma-primary" 
-            dir={currentLanguage?.direction || "rtl"}
-          >
-            {translations.results}
-          </h3>
-          <div 
-            className="space-y-2 text-gray-700" 
-            dir={currentLanguage?.direction || "rtl"}
-          >
-            <div className="flex justify-between">
-              <span>{translations.singleDose}</span>
-              <span className="font-medium">{calculatedResult.singleDose} {calculatedResult.unit}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>{translations.dailyDose}</span>
-              <span className="font-medium">{calculatedResult.dailyDose} {calculatedResult.unit}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>{translations.totalDose}</span>
-              <span className="font-medium">{calculatedResult.totalDose} {calculatedResult.unit}</span>
-            </div>
-          </div>
-          
-          <div 
-            className="mt-4 p-3 bg-yellow-100 text-yellow-800 rounded-md text-sm" 
-            dir={currentLanguage?.direction || "rtl"}
-          >
-            <strong>{translations.note}</strong> {translations.warning}
-          </div>
-        </div>
-      )}
-    </div>
+              {language.code === 'ar' ? 'حساب الجرعة' : 'Calculate Dosage'}
+            </Button>
+          </CardFooter>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="history" className="pt-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>{language.code === 'ar' ? 'سجل الحسابات' : 'Calculation History'}</CardTitle>
+            <CardDescription>
+              {language.code === 'ar'
+                ? 'عرض آخر 10 حسابات للجرعات'
+                : 'View the last 10 dosage calculations'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {calculationHistory.length === 0 ? (
+              <p className="text-center text-gray-500 my-8" dir={language.direction}>
+                {language.code === 'ar'
+                  ? 'لا توجد حسابات سابقة'
+                  : 'No previous calculations'}
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {calculationHistory.map((record) => (
+                  <div 
+                    key={record.id} 
+                    className="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                    dir={language.direction}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-medium">{record.drugName}</h4>
+                        <p className="text-sm text-gray-500">
+                          {language.code === 'ar'
+                            ? `الوزن: ${record.weight} كجم`
+                            : `Weight: ${record.weight} kg`}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-pharma-primary font-medium">
+                          {language.code === 'ar'
+                            ? `${record.dosage} مجم`
+                            : `${record.dosage} mg`}
+                        </span>
+                        <p className="text-xs text-gray-400">{formatDate(record.date)}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </Tabs>
   );
-}
+};
+
+export default DosageCalculator;
