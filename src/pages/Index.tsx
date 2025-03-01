@@ -1,321 +1,212 @@
 
 import { useState, useEffect, useContext } from "react";
-import { Drug, FilterOptions } from "@/types";
-import { searchDrugs, getAllDrugs, translateDrugToEnglish } from "@/services/drugService";
-import Header from "@/components/Header";
-import Hero from "@/components/Hero";
+import { LanguageContext } from "@/App";
 import SearchBar from "@/components/SearchBar";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import FilterPanel from "@/components/FilterPanel";
 import SearchResults from "@/components/SearchResults";
-import Footer from "@/components/Footer";
+import Hero from "@/components/Hero";
+import { searchDrugs } from "@/services/drugService";
+import { Drug, FilterOptions, AppLanguage } from "@/types";
+import DrugCard from "@/components/DrugCard";
 import { useToast } from "@/hooks/use-toast";
-import { LanguageContext } from "@/App";
 
-const Index = () => {
+export default function Index() {
   const { language, setLanguage } = useContext(LanguageContext);
-  const [searchResults, setSearchResults] = useState<Drug[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<Drug[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const [popularDrugs, setPopularDrugs] = useState<Drug[]>([]);
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
-    country: null,
-    priceRange: {
-      min: null,
-      max: null
-    },
-    availability: null
+    country: 'all',
+    priceRange: [0, 1000],
+    availability: undefined
   });
-  const [isSearching, setIsSearching] = useState(false);
-  const [featuredDrugs, setFeaturedDrugs] = useState<Drug[]>([]);
-  const [resultsVisible, setResultsVisible] = useState(false);
   const { toast } = useToast();
 
-  // Load some featured drugs on initial load
-  useEffect(() => {
-    const allDrugs = getAllDrugs();
-    // Get random 6 drugs for featured section
-    const randomDrugs = [...allDrugs]
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 6);
-    
-    // Translate drugs if language is English
-    if (language.code === 'en') {
-      const translatedDrugs = randomDrugs.map(drug => translateDrugToEnglish(drug));
-      setFeaturedDrugs(translatedDrugs);
-    } else {
-      setFeaturedDrugs(randomDrugs);
-    }
-  }, [language]);
-
-  const handleSearch = (query: string) => {
-    setIsSearching(true);
-    setSearchQuery(query);
-    
-    // Ensure results section will be visible
-    setResultsVisible(true);
-    
-    // Simulate loading delay
-    setTimeout(() => {
-      const results = searchDrugs(query, language.code);
-      
-      // Translate results if language is English
-      const finalResults = language.code === 'en' 
-        ? results.map(drug => translateDrugToEnglish(drug))
-        : results;
-      
-      setSearchResults(finalResults);
-      setIsSearching(false);
-      
-      // Show toast for search results
-      if (finalResults.length > 0) {
-        toast({
-          title: language.code === 'ar' ? "تم العثور على نتائج" : "Results found",
-          description: language.code === 'ar' 
-            ? `تم العثور على ${finalResults.length} نتيجة لـ "${query}"`
-            : `Found ${finalResults.length} results for "${query}"`,
-        });
-      } else {
-        toast({
-          title: language.code === 'ar' ? "لا توجد نتائج" : "No results",
-          description: language.code === 'ar' 
-            ? `لم يتم العثور على نتائج لـ "${query}"`
-            : `No results found for "${query}"`,
-          variant: "destructive",
-        });
-      }
-    }, 500);
+  const handleLanguageChange = (newLanguage: AppLanguage) => {
+    setLanguage(newLanguage);
   };
 
-  const handleLanguageChange = (newLanguage) => {
-    setLanguage(newLanguage);
-    
-    // Translate search results if they exist
-    if (searchResults.length > 0) {
-      if (newLanguage.code === 'en') {
-        const translatedResults = searchResults.map(drug => translateDrugToEnglish(drug));
-        setSearchResults(translatedResults);
-      } else {
-        // Re-search with the original query to get Arabic results
-        const results = searchDrugs(searchQuery, 'ar');
-        setSearchResults(results);
-      }
+  useEffect(() => {
+    // Load some popular drugs for display before search
+    const sampleDrugs = searchDrugs("", language.code).slice(0, 6);
+    setPopularDrugs(sampleDrugs);
+  }, [language.code]);
+
+  const handleSearch = (query: string) => {
+    if (!query.trim()) {
+      toast({
+        title: language.code === 'ar' ? 'حقل البحث فارغ' : 'Empty search field',
+        description: language.code === 'ar' 
+          ? 'يرجى إدخال اسم دواء للبحث عنه' 
+          : 'Please enter a medication name to search',
+        variant: "destructive",
+      });
+      return;
     }
-    
-    // Translate featured drugs
-    const allDrugs = getAllDrugs();
-    const randomDrugs = [...allDrugs]
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 6);
-    
-    if (newLanguage.code === 'en') {
-      const translatedDrugs = randomDrugs.map(drug => translateDrugToEnglish(drug));
-      setFeaturedDrugs(translatedDrugs);
+
+    const results = searchDrugs(query, language.code);
+    setSearchQuery(query);
+    setSearchResults(results);
+    setShowResults(true);
+
+    if (results.length === 0) {
+      toast({
+        title: language.code === 'ar' ? 'لم يتم العثور على نتائج' : 'No results found',
+        description: language.code === 'ar'
+          ? `لم نتمكن من العثور على "${query}" في قاعدة البيانات`
+          : `We couldn't find "${query}" in our database`,
+        variant: "destructive",
+      });
     } else {
-      setFeaturedDrugs(randomDrugs);
+      toast({
+        title: language.code === 'ar' ? 'تم العثور على النتائج' : 'Results found',
+        description: language.code === 'ar'
+          ? `تم العثور على ${results.length} نتيجة لـ "${query}"`
+          : `Found ${results.length} results for "${query}"`,
+      });
     }
-    
-    // You would typically load translations here if using a translation library
-    toast({
-      title: newLanguage.code === 'ar' ? "تم تغيير اللغة" : "Language Changed",
-      description: newLanguage.code === 'ar' ? "تم التبديل إلى اللغة العربية" : "Switched to English language",
-    });
+  };
+
+  const handleFilterChange = (newFilters: FilterOptions) => {
+    setFilterOptions(newFilters);
+  };
+
+  // ترجمات حسب اللغة الحالية
+  const translations = {
+    searchPlaceholder: language.code === 'ar' ? 'ابحث عن اسم الدواء أو المادة الفعالة...' : 'Search by medication name or active ingredient...',
+    filters: language.code === 'ar' ? 'المرشحات' : 'Filters',
+    results: language.code === 'ar' ? 'نتائج البحث' : 'Search Results',
+    popularDrugs: language.code === 'ar' ? 'أدوية شائعة' : 'Popular Medications',
+    exploreMedications: language.code === 'ar' ? 'استكشف الأدوية' : 'Explore Medications',
+    exploreMedicationsDesc: language.code === 'ar'
+      ? 'اكتشف مجموعة متنوعة من الأدوية المتاحة في مصر وبدائلها'
+      : 'Discover a wide range of medications available in Egypt and their alternatives',
+    howItWorks: language.code === 'ar' ? 'كيف يعمل' : 'How It Works',
+    step1Title: language.code === 'ar' ? 'ابحث عن الدواء' : 'Search for Medication',
+    step1Desc: language.code === 'ar'
+      ? 'أدخل اسم الدواء أو المادة الفعالة في شريط البحث'
+      : 'Enter the medication name or active ingredient in the search bar',
+    step2Title: language.code === 'ar' ? 'استعرض البدائل' : 'Browse Alternatives',
+    step2Desc: language.code === 'ar'
+      ? 'استعرض قائمة البدائل المتاحة مع معلومات التسعير والتوافر'
+      : 'Browse the list of available alternatives with pricing and availability information',
+    step3Title: language.code === 'ar' ? 'قارن وحدد' : 'Compare and Choose',
+    step3Desc: language.code === 'ar'
+      ? 'قارن بين الخيارات واختر البديل المناسب لاحتياجاتك'
+      : 'Compare options and choose the alternative that suits your needs',
   };
 
   return (
-    <div className="min-h-screen flex flex-col" dir={language.direction}>
-      <Header onLanguageChange={handleLanguageChange} />
-      
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      <Header onLanguageChange={handleLanguageChange} currentLanguage={language} />
+
       <main className="flex-grow">
-        <Hero appLanguage={language} />
-        
-        <section className="py-16 bg-pharma-secondary">
+        {/* Hero Section */}
+        <Hero />
+
+        {/* البحث والمرشحات */}
+        <section id="search" className="py-12 md:py-16">
           <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto text-center mb-12">
-              <h2 
-                className="text-3xl font-bold text-pharma-primary mb-4"
-                dir={language.direction}
-              >
-                {language.code === 'ar' ? 'ابحث عن دوائك الآن' : 'Search for your medication now'}
-              </h2>
-              <p 
-                className="text-gray-600"
-                dir={language.direction}
-              >
-                {language.code === 'ar' 
-                  ? 'أدخل اسم الدواء للبحث عن البدائل المتاحة وأسعارها في السوق المصري والعالمي' 
-                  : 'Enter medication name to search for available alternatives and prices in Egyptian and global markets'}
-              </p>
+            <div className="mb-8">
+              <SearchBar 
+                onSearch={handleSearch} 
+                placeholder={translations.searchPlaceholder}
+              />
             </div>
-            
-            <SearchBar 
-              onSearch={handleSearch} 
-              placeholder={language.code === 'ar' ? 'ابحث عن دواء...' : 'Search for medication...'}
-            />
-            
-            {(resultsVisible || searchQuery) && (
-              <div className="mt-12 grid grid-cols-1 lg:grid-cols-4 gap-8">
-                <div className="lg:col-span-1">
-                  <FilterPanel onFilterChange={setFilterOptions} currentLanguage={language} />
+
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              {/* مرشحات البحث */}
+              <div className="lg:col-span-1">
+                <h2 
+                  className="text-lg font-semibold mb-4 text-pharma-primary"
+                  dir={language.direction}
+                >
+                  {translations.filters}
+                </h2>
+                <FilterPanel onFilterChange={handleFilterChange} />
+              </div>
+
+              {/* نتائج البحث */}
+              <div className="lg:col-span-3">
+                <SearchResults 
+                  results={searchResults}
+                  filterOptions={filterOptions}
+                  searchQuery={searchQuery}
+                  isVisible={showResults}
+                />
+
+                {/* عرض الأدوية الشائعة عندما لا تكون هناك نتائج بحث */}
+                {!showResults && (
+                  <div>
+                    <h2 
+                      className="text-xl font-bold text-pharma-primary mb-6"
+                      dir={language.direction}
+                    >
+                      {translations.popularDrugs}
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {popularDrugs.map((drug) => (
+                        <DrugCard key={drug.id} drug={drug} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* كيف يعمل */}
+        {!showResults && (
+          <section className="py-14 bg-white">
+            <div className="container mx-auto px-4">
+              <h2 
+                className="text-2xl md:text-3xl font-bold text-center text-pharma-primary mb-12"
+                dir={language.direction}
+              >
+                {translations.howItWorks}
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {/* الخطوة 1 */}
+                <div 
+                  className="bg-slate-50 rounded-xl p-6 text-center shadow-sm"
+                  dir={language.direction}
+                >
+                  <div className="w-12 h-12 bg-pharma-primary text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">1</div>
+                  <h3 className="text-xl font-semibold mb-3">{translations.step1Title}</h3>
+                  <p className="text-gray-600">{translations.step1Desc}</p>
                 </div>
                 
-                <div className="lg:col-span-3">
-                  {isSearching ? (
-                    <div className="flex justify-center items-center h-64">
-                      <div className="w-16 h-16 border-4 border-pharma-primary/20 border-t-pharma-primary rounded-full animate-spin"></div>
-                    </div>
-                  ) : (
-                    <SearchResults 
-                      results={searchResults} 
-                      filterOptions={filterOptions} 
-                      searchQuery={searchQuery}
-                      isVisible={resultsVisible}
-                      currentLanguage={language}
-                    />
-                  )}
+                {/* الخطوة 2 */}
+                <div 
+                  className="bg-slate-50 rounded-xl p-6 text-center shadow-sm"
+                  dir={language.direction}
+                >
+                  <div className="w-12 h-12 bg-pharma-primary text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">2</div>
+                  <h3 className="text-xl font-semibold mb-3">{translations.step2Title}</h3>
+                  <p className="text-gray-600">{translations.step2Desc}</p>
                 </div>
-              </div>
-            )}
-
-            {/* Featured Drugs Section - shown when no search is performed */}
-            {!searchQuery && featuredDrugs.length > 0 && (
-              <div className="mt-16">
-                <h2 
-                  className="text-2xl font-bold text-pharma-primary mb-8 text-center"
+                
+                {/* الخطوة 3 */}
+                <div 
+                  className="bg-slate-50 rounded-xl p-6 text-center shadow-sm"
                   dir={language.direction}
                 >
-                  {language.code === 'ar' ? 'أدوية شائعة' : 'Common Medications'}
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
-                  {featuredDrugs.map((drug) => (
-                    <div 
-                      key={drug.id}
-                      className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer"
-                      dir={language.direction}
-                      onClick={() => {
-                        setSearchQuery(drug.name);
-                        handleSearch(drug.name);
-                      }}
-                    >
-                      <h3 className="text-lg font-medium text-pharma-primary">
-                        {drug.name}
-                      </h3>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {drug.company} - {drug.country}
-                      </p>
-                      <p className="text-pharma-accent font-medium mt-2">
-                        {drug.price} {language.code === 'ar' ? 'جنيه' : 'EGP'}
-                      </p>
-                      <div className="flex justify-between items-center mt-2">
-                        <p className="text-xs text-gray-400">
-                          {language.code === 'ar' ? 'اضغط للبحث عن البدائل' : 'Click to find alternatives'}
-                        </p>
-                        <span className={`text-xs ${drug.isAvailable ? "text-pharma-save" : "text-red-500"}`}>
-                          {drug.isAvailable 
-                            ? (language.code === 'ar' ? 'متوفر' : 'Available') 
-                            : (language.code === 'ar' ? 'غير متوفر' : 'Unavailable')}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                  <div className="w-12 h-12 bg-pharma-primary text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">3</div>
+                  <h3 className="text-xl font-semibold mb-3">{translations.step3Title}</h3>
+                  <p className="text-gray-600">{translations.step3Desc}</p>
                 </div>
-              </div>
-            )}
-          </div>
-        </section>
-        
-        <section className="py-20 bg-white">
-          <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto text-center mb-16">
-              <h2 
-                className="text-3xl font-bold text-pharma-primary mb-4"
-                dir={language.direction}
-              >
-                {language.code === 'ar' 
-                  ? 'لماذا تستخدم MediSwitch؟' 
-                  : 'Why use MediSwitch?'}
-              </h2>
-              <p 
-                className="text-gray-600"
-                dir={language.direction}
-              >
-                {language.code === 'ar' 
-                  ? 'نوفر لك أسهل طريقة للعثور على بدائل للأدوية بأسعار مناسبة مع التركيز على جودة المنتج' 
-                  : 'We provide the easiest way to find medication alternatives at reasonable prices with a focus on product quality'}
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="bg-pharma-secondary rounded-xl p-8 text-center transition-transform duration-300 hover:-translate-y-2">
-                <div className="w-16 h-16 bg-pharma-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <svg className="w-8 h-8 text-pharma-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                  </svg>
-                </div>
-                <h3 
-                  className="text-xl font-semibold mb-3 text-pharma-primary"
-                  dir={language.direction}
-                >
-                  {language.code === 'ar' ? 'بدائل متعددة' : 'Multiple Alternatives'}
-                </h3>
-                <p 
-                  className="text-gray-600"
-                  dir={language.direction}
-                >
-                  {language.code === 'ar' 
-                    ? 'نوفر قائمة شاملة من البدائل لكل دواء بناءً على المادة الفعالة والتركيبة الدوائية' 
-                    : 'We provide a comprehensive list of alternatives for each medication based on active ingredients and pharmaceutical composition'}
-                </p>
-              </div>
-              
-              <div className="bg-pharma-secondary rounded-xl p-8 text-center transition-transform duration-300 hover:-translate-y-2">
-                <div className="w-16 h-16 bg-pharma-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <svg className="w-8 h-8 text-pharma-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                </div>
-                <h3 
-                  className="text-xl font-semibold mb-3 text-pharma-primary"
-                  dir={language.direction}
-                >
-                  {language.code === 'ar' ? 'توفير المال' : 'Save Money'}
-                </h3>
-                <p 
-                  className="text-gray-600"
-                  dir={language.direction}
-                >
-                  {language.code === 'ar' 
-                    ? 'اعثر على بدائل أقل تكلفة ومنتجة محلياً بنفس الجودة وبأسعار أفضل' 
-                    : 'Find lower-cost, locally produced alternatives with the same quality at better prices'}
-                </p>
-              </div>
-              
-              <div className="bg-pharma-secondary rounded-xl p-8 text-center transition-transform duration-300 hover:-translate-y-2">
-                <div className="w-16 h-16 bg-pharma-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <svg className="w-8 h-8 text-pharma-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                  </svg>
-                </div>
-                <h3 
-                  className="text-xl font-semibold mb-3 text-pharma-primary"
-                  dir={language.direction}
-                >
-                  {language.code === 'ar' ? 'جودة موثوقة' : 'Reliable Quality'}
-                </h3>
-                <p 
-                  className="text-gray-600"
-                  dir={language.direction}
-                >
-                  {language.code === 'ar' 
-                    ? 'نقدم معلومات عن الأدوية المعتمدة من هيئة الدواء المصرية والهيئات الدولية' 
-                    : 'We provide information about medications approved by the Egyptian Drug Authority and international agencies'}
-                </p>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
       </main>
-      
-      <Footer currentLanguage={language} />
+
+      <Footer />
     </div>
   );
-};
-
-export default Index;
+}

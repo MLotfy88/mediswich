@@ -1,11 +1,6 @@
 
 import { useContext } from "react";
-import { AppLanguage } from "@/types";
 import { LanguageContext } from "@/App";
-
-interface HeroProps {
-  appLanguage?: AppLanguage;
-}
 
 const Hero = () => {
   const { language } = useContext(LanguageContext);

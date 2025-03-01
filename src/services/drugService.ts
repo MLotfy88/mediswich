@@ -1,178 +1,130 @@
 
-import { Drug, FilterOptions } from "@/types";
-import { mockDrugs, englishTranslations } from "@/data/mockDrugs";
+import { Drug, FilterOptions, AppLanguage } from "@/types";
+import { antibiotics } from "@/data/drugs/antibiotics";
+import { painRelievers } from "@/data/drugs/painRelievers";
+import { cholesterolLowering } from "@/data/drugs/cholesterolLowering";
+import { cardiovascular } from "@/data/drugs/cardiovascular";
+import { psychotropics } from "@/data/drugs/psychotropics";
+import { hormones } from "@/data/drugs/hormones";
+import { gastrointestinal } from "@/data/drugs/gastrointestinal";
+import { antiallergic } from "@/data/drugs/antiallergic";
+import { antidiabetic } from "@/data/drugs/antidiabetic";
+import { specialMedications } from "@/data/drugs/specialMedications";
+import { webTebMedications } from "@/data/drugs/webTebMedications";
+import { altibbiMedications } from "@/data/drugs/altibbiMedications";
+import { edaMedications } from "@/data/drugs/edaMedications";
 
-// Get all drugs
-export const getAllDrugs = () => {
-  return mockDrugs;
-};
+// مجموعة شاملة من الأدوية من كافة الفئات
+const allDrugs: Drug[] = [
+  ...antibiotics,
+  ...painRelievers,
+  ...cholesterolLowering,
+  ...cardiovascular,
+  ...psychotropics,
+  ...hormones,
+  ...gastrointestinal,
+  ...antiallergic,
+  ...antidiabetic,
+  ...specialMedications,
+  ...webTebMedications, 
+  ...altibbiMedications,
+  ...edaMedications
+];
 
-// Search for drugs by name
-export const searchDrugs = (query: string, language: string = 'ar'): Drug[] => {
-  if (!query || query.trim() === "") {
-    return [];
-  }
+// البحث عن البدائل في البيانات
+export const searchDrugs = (query: string, lang: string = 'ar'): Drug[] => {
+  if (!query || query.length < 2) return [];
 
-  const normalizedQuery = query.toLowerCase().trim();
+  const normalizedQuery = query.toLowerCase();
   
-  return mockDrugs.filter((drug) => {
-    const drugName = drug.name.toLowerCase();
-    
-    // For English language, check English translations
-    if (language === 'en') {
-      const translatedName = getEnglishName(drug.name) || '';
-      return translatedName.toLowerCase().includes(normalizedQuery);
+  // البحث في الأسماء الإنجليزية إذا كانت اللغة إنجليزية، وإلا البحث في الأسماء العربية
+  const searchResults = allDrugs.filter(drug => {
+    if (lang === 'en') {
+      // البحث في البيانات الإنجليزية
+      return drug.nameEn?.toLowerCase().includes(normalizedQuery) || 
+             drug.activeIngredientEn?.toLowerCase().includes(normalizedQuery);
+    } else {
+      // البحث في البيانات العربية
+      return drug.name.toLowerCase().includes(normalizedQuery) || 
+             (drug.activeIngredient && drug.activeIngredient.toLowerCase().includes(normalizedQuery));
     }
-    
-    // Default to Arabic search
-    return drugName.includes(normalizedQuery);
   });
+
+  return searchResults;
 };
 
-// Get drug suggestions based on partial name
-export const getDrugSuggestions = (partialName: string, language: string = 'ar'): { id: string; name: string; nameInOtherLanguage?: string }[] => {
-  if (!partialName || partialName.trim() === "") {
-    return [];
+// حساب نسبة التوفير بالمقارنة مع السعر الأعلى
+export const calculateSavings = (drug: Drug): number => {
+  if (!drug.alternatives || drug.alternatives.length === 0) return 0;
+  
+  // Find the most expensive alternative
+  const mostExpensiveAlt = drug.alternatives.reduce((prev, current) => 
+    prev.price > current.price ? prev : current
+  );
+  
+  if (mostExpensiveAlt.price <= drug.price) return 0;
+  
+  // Calculate the savings percentage
+  const savingsPercentage = Math.round(((mostExpensiveAlt.price - drug.price) / mostExpensiveAlt.price) * 100);
+  return savingsPercentage;
+};
+
+// تطبيق المرشحات المحددة على نتائج البحث
+export const filterDrugs = (
+  drugs: Drug[], 
+  country?: string, 
+  priceRange?: [number, number],
+  availability?: boolean
+): Drug[] => {
+  let filtered = [...drugs];
+
+  // فلترة حسب بلد المنشأ
+  if (country && country !== 'all') {
+    if (country === 'egypt') {
+      filtered = filtered.filter(drug => drug.isEgyptian === true);
+    } else {
+      filtered = filtered.filter(drug => drug.country === country || drug.isEgyptian === false);
+    }
   }
 
-  const normalizedPartialName = partialName.toLowerCase().trim();
-  
-  const suggestions = mockDrugs
-    .filter((drug) => {
-      if (language === 'en') {
-        const translatedName = getEnglishName(drug.name) || '';
-        return translatedName.toLowerCase().includes(normalizedPartialName);
-      }
-      
-      return drug.name.toLowerCase().includes(normalizedPartialName);
-    })
-    .slice(0, 7) // Limit to 7 suggestions
-    .map((drug) => {
-      // Return bilingual names
-      if (language === 'en') {
-        return {
-          id: drug.id,
-          name: getEnglishName(drug.name) || drug.name,
-          nameInOtherLanguage: drug.name // Original Arabic name
-        };
-      } else {
-        return {
-          id: drug.id,
-          name: drug.name,
-          nameInOtherLanguage: getEnglishName(drug.name) // English translation
-        };
-      }
-    });
-
-  return suggestions;
-};
-
-// Get a drug by ID
-export const getDrugById = (id: string): Drug | undefined => {
-  return mockDrugs.find((drug) => drug.id === id);
-};
-
-// Get alternatives for a drug
-export const getDrugAlternatives = (drugId: string): Drug[] => {
-  const drug = getDrugById(drugId);
-  if (!drug || !drug.alternatives) {
-    return [];
+  // فلترة حسب نطاق السعر
+  if (priceRange && priceRange.length === 2) {
+    const [min, max] = priceRange;
+    filtered = filtered.filter(drug => drug.price >= min && drug.price <= max);
   }
-  
-  return drug.alternatives.map(alt => {
-    const fullDrug = getDrugById(alt.id);
-    return fullDrug || alt as Drug;
+
+  // فلترة حسب التوافر
+  if (availability !== undefined) {
+    filtered = filtered.filter(drug => drug.isAvailable === availability);
+  }
+
+  return filtered;
+};
+
+// الحصول على اقتراحات للأدوية أثناء الكتابة
+export const getDrugSuggestions = (
+  query: string,
+  language: string = 'ar'
+): Array<{ id: string; name: string; nameInOtherLanguage?: string }> => {
+  if (!query || query.length < 2) return [];
+
+  const normalizedQuery = query.toLowerCase();
+  const results: Array<{ id: string; name: string; nameInOtherLanguage?: string }> = [];
+  const foundDrugs = new Set<string>(); // لتجنب التكرار
+
+  allDrugs.forEach(drug => {
+    const nameToSearch = language === 'ar' ? drug.name : (drug.nameEn || drug.name);
+    const nameInOtherLanguage = language === 'ar' ? drug.nameEn : drug.name;
+    
+    if (nameToSearch.toLowerCase().includes(normalizedQuery) && !foundDrugs.has(nameToSearch)) {
+      foundDrugs.add(nameToSearch);
+      results.push({
+        id: drug.id,
+        name: nameToSearch,
+        nameInOtherLanguage: nameInOtherLanguage !== nameToSearch ? nameInOtherLanguage : undefined
+      });
+    }
   });
-};
 
-// Filter drugs based on provided filter options
-export const filterDrugs = (drugs: Drug[], filterOptions: FilterOptions): Drug[] => {
-  return drugs.filter((drug) => {
-    // Country filter
-    if (filterOptions.country && drug.country !== filterOptions.country) {
-      return false;
-    }
-    
-    // Price range filter
-    if (filterOptions.priceRange) {
-      if (
-        (filterOptions.priceRange.min !== null && drug.price < filterOptions.priceRange.min) ||
-        (filterOptions.priceRange.max !== null && drug.price > filterOptions.priceRange.max)
-      ) {
-        return false;
-      }
-    }
-    
-    // Availability filter
-    if (filterOptions.availability !== null && drug.isAvailable !== filterOptions.availability) {
-      return false;
-    }
-    
-    return true;
-  });
-};
-
-// Get English translation of drug name
-export const getEnglishName = (arabicName: string): string | undefined => {
-  return englishTranslations[arabicName]?.name;
-};
-
-// Get English translation of active ingredient
-export const getEnglishActiveIngredient = (arabicActiveIngredient: string): string | undefined => {
-  return englishTranslations[arabicActiveIngredient]?.activeIngredient;
-};
-
-// Translate drug object to English
-export const translateDrugToEnglish = (drug: Drug): Drug => {
-  const translatedDrug = { ...drug };
-  
-  // Translate drug name
-  translatedDrug.name = getEnglishName(drug.name) || drug.name;
-  
-  // Translate active ingredient
-  translatedDrug.activeIngredient = getEnglishActiveIngredient(drug.activeIngredient) || drug.activeIngredient;
-  
-  // Translate country if needed (could be added to translations)
-  
-  // Translate alternatives
-  if (drug.alternatives && drug.alternatives.length > 0) {
-    translatedDrug.alternatives = drug.alternatives.map(alt => {
-      const translatedAlt = { ...alt };
-      translatedAlt.name = getEnglishName(alt.name) || alt.name;
-      translatedAlt.activeIngredient = getEnglishActiveIngredient(alt.activeIngredient) || alt.activeIngredient;
-      return translatedAlt;
-    });
-  }
-  
-  return translatedDrug;
-};
-
-// Search all drug properties for a keyword
-export const searchAllDrugProperties = (query: string, language: string = 'ar'): Drug[] => {
-  if (!query || query.trim() === "") {
-    return [];
-  }
-
-  const normalizedQuery = query.toLowerCase().trim();
-  
-  return mockDrugs.filter((drug) => {
-    // For English language, check English translations
-    if (language === 'en') {
-      const translatedName = getEnglishName(drug.name) || '';
-      const translatedActiveIngredient = getEnglishActiveIngredient(drug.activeIngredient) || '';
-      
-      return (
-        translatedName.toLowerCase().includes(normalizedQuery) ||
-        translatedActiveIngredient.toLowerCase().includes(normalizedQuery) ||
-        drug.company.toLowerCase().includes(normalizedQuery)
-      );
-    }
-    
-    // For Arabic language
-    return (
-      drug.name.toLowerCase().includes(normalizedQuery) ||
-      drug.activeIngredient.toLowerCase().includes(normalizedQuery) ||
-      drug.company.toLowerCase().includes(normalizedQuery)
-    );
-  });
+  return results.slice(0, 7); // إرجاع حد أقصى 7 اقتراحات
 };
