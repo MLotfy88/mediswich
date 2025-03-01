@@ -20,8 +20,11 @@ export default function Index() {
   const [popularDrugs, setPopularDrugs] = useState<Drug[]>([]);
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
     country: 'all',
-    priceRange: [0, 1000],
-    availability: undefined
+    priceRange: {
+      min: 0,
+      max: 1000
+    },
+    availability: null
   });
   const { toast } = useToast();
 

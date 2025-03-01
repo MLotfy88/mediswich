@@ -41,8 +41,8 @@ export const searchDrugs = (query: string, lang: string = 'ar'): Drug[] => {
   const searchResults = allDrugs.filter(drug => {
     if (lang === 'en') {
       // البحث في البيانات الإنجليزية
-      return drug.nameEn?.toLowerCase().includes(normalizedQuery) || 
-             drug.activeIngredientEn?.toLowerCase().includes(normalizedQuery);
+      return (drug.nameEn || drug.name).toLowerCase().includes(normalizedQuery) || 
+             (drug.activeIngredientEn || drug.activeIngredient).toLowerCase().includes(normalizedQuery);
     } else {
       // البحث في البيانات العربية
       return drug.name.toLowerCase().includes(normalizedQuery) || 
@@ -72,30 +72,38 @@ export const calculateSavings = (drug: Drug): number => {
 // تطبيق المرشحات المحددة على نتائج البحث
 export const filterDrugs = (
   drugs: Drug[], 
-  country?: string, 
-  priceRange?: [number, number],
-  availability?: boolean
+  country?: string | null, 
+  priceRange?: { min: number | null; max: number | null },
+  availability?: string | null
 ): Drug[] => {
   let filtered = [...drugs];
 
   // فلترة حسب بلد المنشأ
   if (country && country !== 'all') {
-    if (country === 'egypt') {
+    if (country === 'egypt' || country === 'egyptian') {
       filtered = filtered.filter(drug => drug.isEgyptian === true);
+    } else if (country === 'international') {
+      filtered = filtered.filter(drug => drug.isEgyptian === false);
     } else {
-      filtered = filtered.filter(drug => drug.country === country || drug.isEgyptian === false);
+      filtered = filtered.filter(drug => drug.country === country);
     }
   }
 
   // فلترة حسب نطاق السعر
-  if (priceRange && priceRange.length === 2) {
-    const [min, max] = priceRange;
-    filtered = filtered.filter(drug => drug.price >= min && drug.price <= max);
+  if (priceRange && priceRange.min !== null && priceRange.max !== null) {
+    filtered = filtered.filter(drug => 
+      drug.price >= (priceRange.min || 0) && 
+      drug.price <= (priceRange.max || Number.MAX_SAFE_INTEGER)
+    );
   }
 
   // فلترة حسب التوافر
-  if (availability !== undefined) {
-    filtered = filtered.filter(drug => drug.isAvailable === availability);
+  if (availability !== null && availability !== undefined) {
+    if (availability === 'available') {
+      filtered = filtered.filter(drug => drug.isAvailable === true);
+    } else if (availability === 'unavailable') {
+      filtered = filtered.filter(drug => drug.isAvailable === false);
+    }
   }
 
   return filtered;
@@ -114,7 +122,7 @@ export const getDrugSuggestions = (
 
   allDrugs.forEach(drug => {
     const nameToSearch = language === 'ar' ? drug.name : (drug.nameEn || drug.name);
-    const nameInOtherLanguage = language === 'ar' ? drug.nameEn : drug.name;
+    const nameInOtherLanguage = language === 'ar' ? (drug.nameEn || drug.name) : drug.name;
     
     if (nameToSearch.toLowerCase().includes(normalizedQuery) && !foundDrugs.has(nameToSearch)) {
       foundDrugs.add(nameToSearch);

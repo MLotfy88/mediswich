@@ -2,23 +2,27 @@
 export interface Alternative {
   id: string;
   name: string;
+  nameEn?: string;
   company: string;
   price: number;
   country: string;
   isEgyptian: boolean;
   isAvailable: boolean;
   activeIngredient: string;
+  activeIngredientEn?: string;
 }
 
 export interface Drug {
   id: string;
   name: string;
+  nameEn?: string;
   company: string;
   price: number;
   country: string;
   isEgyptian: boolean;
   isAvailable: boolean;
   activeIngredient: string;
+  activeIngredientEn?: string;
   alternatives: Alternative[];
 }
 

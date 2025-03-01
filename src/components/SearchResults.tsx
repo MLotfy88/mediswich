@@ -48,7 +48,12 @@ export default function SearchResults({
   // فلترة النتائج وفقًا للمرشحات المحددة
   useEffect(() => {
     const applyFilters = () => {
-      const filtered = filterDrugs(results, filterOptions.country, filterOptions.priceRange, filterOptions.availability);
+      const filtered = filterDrugs(
+        results, 
+        filterOptions.country, 
+        filterOptions.priceRange, 
+        filterOptions.availability
+      );
       
       setFilteredResults(filtered);
       
