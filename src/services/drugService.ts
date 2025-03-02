@@ -1,4 +1,3 @@
-
 import { Drug, FilterOptions, AppLanguage } from "@/types";
 import { antibiotics } from "@/data/drugs/antibiotics";
 import { painRelievers } from "@/data/drugs/painRelievers";
@@ -13,6 +12,7 @@ import { specialMedications } from "@/data/drugs/specialMedications";
 import { webTebMedications } from "@/data/drugs/webTebMedications";
 import { altibbiMedications } from "@/data/drugs/altibbiMedications";
 import { edaMedications } from "@/data/drugs/edaMedications";
+import { importedDrugs } from "@/data/drugs/importedDrugs";
 
 // مجموعة شاملة من الأدوية من كافة الفئات
 const allDrugs: Drug[] = [
@@ -28,7 +28,8 @@ const allDrugs: Drug[] = [
   ...specialMedications,
   ...webTebMedications, 
   ...altibbiMedications,
-  ...edaMedications
+  ...edaMedications,
+  ...importedDrugs
 ];
 
 // البحث عن البدائل في البيانات
