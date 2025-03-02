@@ -6,17 +6,32 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function ImportDrugsForm() {
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { toast } = useToast();
   
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
     
+    // حفظ اسم الملف المحدد للعرض
+    setSelectedFile(file);
+  };
+  
+  const handleImport = async () => {
+    if (!selectedFile) {
+      toast({
+        title: "لم يتم اختيار ملف",
+        description: "الرجاء اختيار ملف CSV أولاً",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
       // قراءة محتوى الملف
-      const content = await file.text();
+      const content = await selectedFile.text();
       
       // استدعاء وظيفة الاستيراد
       const importedDrugs = importDrugsFromCSV(content);
@@ -27,6 +42,9 @@ export default function ImportDrugsForm() {
         variant: "default",
       });
       
+      // إعادة تعيين الملف المحدد بعد النجاح
+      setSelectedFile(null);
+      
     } catch (error) {
       console.error("خطأ في استيراد البيانات:", error);
       toast({
@@ -36,11 +54,6 @@ export default function ImportDrugsForm() {
       });
     } finally {
       setIsLoading(false);
-      
-      // إعادة تعيين حقل الملف
-      if (event.target) {
-        event.target.value = "";
-      }
     }
   };
   
@@ -58,22 +71,40 @@ export default function ImportDrugsForm() {
           id,name,nameEn,company,price,country,isEgyptian,isAvailable,activeIngredient,activeIngredientEn
         </p>
         
-        <div className="flex items-center space-x-2">
-          <input
-            type="file"
-            id="csvFile"
-            accept=".csv"
-            className="hidden"
-            onChange={handleFileUpload}
-            disabled={isLoading}
-          />
-          <label
-            htmlFor="csvFile"
-            className={`py-2 px-4 rounded-md text-white font-medium cursor-pointer bg-pharma-primary hover:bg-pharma-primary/90 transition-colors
-              ${isLoading ? "opacity-70 cursor-not-allowed" : ""}`}
+        <div className="flex flex-col space-y-3">
+          <div className="flex items-center space-x-2">
+            <input
+              type="file"
+              id="csvFile"
+              accept=".csv"
+              className="hidden"
+              onChange={handleFileUpload}
+              disabled={isLoading}
+            />
+            <label
+              htmlFor="csvFile"
+              className={`py-2 px-4 rounded-md text-white font-medium cursor-pointer bg-pharma-primary hover:bg-pharma-primary/90 transition-colors
+                ${isLoading ? "opacity-70 cursor-not-allowed" : ""}`}
+            >
+              اختر ملف CSV
+            </label>
+          </div>
+          
+          {/* عرض اسم الملف المحدد */}
+          {selectedFile && (
+            <div className="text-sm text-gray-700 bg-gray-100 p-2 rounded-md">
+              الملف المحدد: {selectedFile.name}
+            </div>
+          )}
+          
+          {/* زر رفع الملف */}
+          <Button
+            onClick={handleImport}
+            disabled={!selectedFile || isLoading}
+            className="bg-pharma-primary hover:bg-pharma-primary/90 w-full"
           >
-            {isLoading ? "جاري الاستيراد..." : "اختر ملف CSV"}
-          </label>
+            {isLoading ? "جاري الاستيراد..." : "تحميل ورفع الملف"}
+          </Button>
         </div>
       </div>
     </div>
