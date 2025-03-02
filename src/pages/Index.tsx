@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useContext } from "react";
 import { LanguageContext } from "@/App";
 import SearchBar from "@/components/SearchBar";
@@ -7,6 +6,7 @@ import Footer from "@/components/Footer";
 import FilterPanel from "@/components/FilterPanel";
 import SearchResults from "@/components/SearchResults";
 import Hero from "@/components/Hero";
+import ImportDrugsForm from "@/components/ImportDrugsForm";
 import { searchDrugs } from "@/services/drugService";
 import { Drug, FilterOptions, AppLanguage } from "@/types";
 import DrugCard from "@/components/DrugCard";
@@ -100,6 +100,7 @@ export default function Index() {
     step3Desc: language.code === 'ar'
       ? 'قارن بين الخيارات واختر البديل المناسب لاحتياجاتك'
       : 'Compare options and choose the alternative that suits your needs',
+    importData: language.code === 'ar' ? 'استيراد البيانات' : 'Import Data',
   };
 
   return (
@@ -130,6 +131,17 @@ export default function Index() {
                   {translations.filters}
                 </h2>
                 <FilterPanel onFilterChange={handleFilterChange} />
+                
+                {/* إضافة مكون استيراد البيانات */}
+                <div className="mt-6">
+                  <h2 
+                    className="text-lg font-semibold mb-4 text-pharma-primary"
+                    dir={language.direction}
+                  >
+                    {translations.importData}
+                  </h2>
+                  <ImportDrugsForm />
+                </div>
               </div>
 
               {/* نتائج البحث */}
