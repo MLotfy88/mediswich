@@ -68,7 +68,7 @@ export default function ImportDrugsForm() {
         
         <p className="text-xs text-gray-500">
           تنسيق CSV المتوقع: <br />
-          id,name,nameEn,company,price,country,isEgyptian,isAvailable,activeIngredient,activeIngredientEn
+          اسم المنتج,Product Name,المادة الفعالة,Active Ingredient,نوع الدواء,بلد المنشأ,الشركة المصنعة,السعر (EGP)
         </p>
         
         <div className="flex flex-col space-y-3">

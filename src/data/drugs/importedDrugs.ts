@@ -15,6 +15,10 @@ export const importDrugsFromCSV = (csvContent: string): Drug[] => {
     // تحويل محتوى CSV إلى أدوية
     const drugs = convertCSVToDrugs(csvContent);
     
+    if (drugs.length === 0) {
+      throw new Error("لم يتم العثور على أي أدوية صالحة في الملف");
+    }
+    
     // إضافة الأدوية الجديدة إلى المصفوفة
     // استخدام Set للحصول على معرفات فريدة وتجنب التكرار
     const existingIds = new Set(importedDrugs.map(drug => drug.id));
@@ -33,4 +37,3 @@ export const importDrugsFromCSV = (csvContent: string): Drug[] => {
     throw error;
   }
 };
-

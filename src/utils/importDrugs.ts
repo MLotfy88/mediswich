@@ -1,49 +1,62 @@
-
 import { Drug } from "@/types";
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * تحويل بيانات الأدوية من CSV إلى تنسيق التطبيق
  * 
  * تنسيق CSV المتوقع:
- * id,name,nameEn,company,price,country,isEgyptian,isAvailable,activeIngredient,activeIngredientEn
- * 
- * مثال:
- * 201,باراسيتامول 500 مج,Paracetamol 500mg,فاركو,10,مصر,true,true,باراسيتامول,Paracetamol
+ * اسم المنتج,Product Name,المادة الفعالة,Active Ingredient,نوع الدواء,بلد المنشأ,الشركة المصنعة,السعر (EGP)
  */
 export const convertCSVToDrugs = (csvData: string): Drug[] => {
   const lines = csvData.trim().split("\n");
-  const headers = lines[0].split(",");
-  
-  // التحقق من وجود الحقول الأساسية
-  const requiredFields = ["id", "name", "company", "price", "country", "isEgyptian", "isAvailable", "activeIngredient"];
-  const missingFields = requiredFields.filter(field => !headers.includes(field));
-  
-  if (missingFields.length > 0) {
-    throw new Error(`حقول مفقودة في ملف CSV: ${missingFields.join(", ")}`);
-  }
   
   // تحويل البيانات إلى كائنات أدوية
   const drugs: Drug[] = [];
   
   for (let i = 1; i < lines.length; i++) {
-    const values = lines[i].split(",");
-    if (values.length !== headers.length) continue;
-    
-    const drug: any = {};
-    headers.forEach((header, index) => {
-      if (header === "price") {
-        drug[header] = parseFloat(values[index]);
-      } else if (header === "isEgyptian" || header === "isAvailable") {
-        drug[header] = values[index].toLowerCase() === "true";
-      } else {
-        drug[header] = values[index];
-      }
-    });
-    
-    // إضافة مصفوفة البدائل الفارغة إذا لم تكن موجودة
-    drug.alternatives = drug.alternatives || [];
-    
-    drugs.push(drug);
+    try {
+      const values = lines[i].split(",");
+      if (values.length < 8) continue; // تخطي الصفوف التي لا تحتوي على البيانات الكاملة
+      
+      // ترتيب البيانات حسب التنسيق الجديد
+      const name = values[0].trim();
+      const nameEn = values[1].trim();
+      const activeIngredient = values[2].trim();
+      const activeIngredientEn = values[3].trim();
+      const drugType = values[4].trim(); // نوع الدواء (نحفظه لمعلومات إضافية)
+      const country = values[5].trim();
+      const company = values[6].trim();
+      const priceStr = values[7].trim().replace("EGP", "").replace(" ", "");
+      const price = parseFloat(priceStr);
+      
+      if (!name || isNaN(price)) continue; // تخطي الصفوف بدون اسم أو سعر صالح
+      
+      // إنشاء معرف فريد للدواء الجديد
+      const id = uuidv4();
+      
+      // تحديد ما إذا كان الدواء مصري
+      const isEgyptian = country.includes("مصر") || country.toLowerCase().includes("egypt");
+      
+      // إنشاء كائن الدواء
+      const drug: Drug = {
+        id,
+        name,
+        nameEn,
+        company,
+        price: isNaN(price) ? 0 : price,
+        country,
+        isEgyptian,
+        isAvailable: true, // نفترض أنه متاح افتراضيًا
+        activeIngredient,
+        activeIngredientEn,
+        alternatives: [] // بدون بدائل في البداية
+      };
+      
+      drugs.push(drug);
+    } catch (error) {
+      console.error(`خطأ في سطر ${i}:`, error);
+      // استمر في المعالجة رغم الأخطاء في بعض السطور
+    }
   }
   
   return drugs;
@@ -111,4 +124,3 @@ import { Drug } from "@/types";
 export const ${categoryName.toLowerCase()}: Drug[] = ${JSON.stringify(drugs, null, 2)};
 `;
 };
-
