@@ -42,7 +42,7 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
 
     try {
       // Fetch the existing drugs first
-      const existingDrugs = await getAllDrugs();
+      const existingDrugs = getAllDrugs();
       
       // Call importDrugsFromCSV with all required arguments
       importDrugsFromCSV(

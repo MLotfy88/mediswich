@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef, useContext } from 'react';
 import { Drug, DrugSuggestion } from '@/types';
 import { LanguageContext } from '@/App';
@@ -33,7 +32,7 @@ const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({
 
     // Use an async function inside useEffect to properly handle the Promise
     const fetchSuggestions = async () => {
-      const allDrugs = await getAllDrugs();
+      const allDrugs = getAllDrugs();  // No await needed since getAllDrugs now returns a direct array
       let filteredSuggestions: DrugSuggestion[] = [];
 
       if (alternativesFor) {
