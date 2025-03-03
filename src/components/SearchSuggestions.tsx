@@ -31,49 +31,55 @@ const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({
       return;
     }
 
-    const allDrugs = getAllDrugs();
-    let filteredSuggestions: DrugSuggestion[] = [];
+    // Use an async function inside useEffect to properly handle the Promise
+    const fetchSuggestions = async () => {
+      const allDrugs = await getAllDrugs();
+      let filteredSuggestions: DrugSuggestion[] = [];
 
-    if (alternativesFor) {
-      // If we're searching for alternatives, find the drug and get its alternatives
-      const drug = allDrugs.find(d => d.id === alternativesFor);
-      if (drug && drug.alternatives) {
-        filteredSuggestions = drug.alternatives
-          .filter(alt => 
-            (alt.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-             (alt.nameEn && alt.nameEn.toLowerCase().includes(searchTerm.toLowerCase())) ||
-             alt.activeIngredient.toLowerCase().includes(searchTerm.toLowerCase()) ||
-             (alt.activeIngredientEn && alt.activeIngredientEn.toLowerCase().includes(searchTerm.toLowerCase())))
+      if (alternativesFor) {
+        // If we're searching for alternatives, find the drug and get its alternatives
+        const drug = allDrugs.find(d => d.id === alternativesFor);
+        if (drug && drug.alternatives) {
+          filteredSuggestions = drug.alternatives
+            .filter(alt => 
+              (alt.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+               (alt.nameEn && alt.nameEn.toLowerCase().includes(searchTerm.toLowerCase())) ||
+               alt.activeIngredient.toLowerCase().includes(searchTerm.toLowerCase()) ||
+               (alt.activeIngredientEn && alt.activeIngredientEn.toLowerCase().includes(searchTerm.toLowerCase())))
+            )
+            .map(alt => ({
+              id: alt.id,
+              name: alt.name,
+              nameEn: alt.nameEn,
+              activeIngredient: alt.activeIngredient,
+              activeIngredientEn: alt.activeIngredientEn
+            }));
+        }
+      } else {
+        // Normal drug search
+        filteredSuggestions = allDrugs
+          .filter(drug => 
+            (drug.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+             (drug.nameEn && drug.nameEn.toLowerCase().includes(searchTerm.toLowerCase())) ||
+             drug.activeIngredient.toLowerCase().includes(searchTerm.toLowerCase()) ||
+             (drug.activeIngredientEn && drug.activeIngredientEn.toLowerCase().includes(searchTerm.toLowerCase())))
           )
-          .map(alt => ({
-            id: alt.id,
-            name: alt.name,
-            nameEn: alt.nameEn,
-            activeIngredient: alt.activeIngredient,
-            activeIngredientEn: alt.activeIngredientEn
+          .map(drug => ({
+            id: drug.id,
+            name: drug.name,
+            nameEn: drug.nameEn,
+            activeIngredient: drug.activeIngredient,
+            activeIngredientEn: drug.activeIngredientEn
           }));
       }
-    } else {
-      // Normal drug search
-      filteredSuggestions = allDrugs
-        .filter(drug => 
-          (drug.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-           (drug.nameEn && drug.nameEn.toLowerCase().includes(searchTerm.toLowerCase())) ||
-           drug.activeIngredient.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           (drug.activeIngredientEn && drug.activeIngredientEn.toLowerCase().includes(searchTerm.toLowerCase())))
-        )
-        .map(drug => ({
-          id: drug.id,
-          name: drug.name,
-          nameEn: drug.nameEn,
-          activeIngredient: drug.activeIngredient,
-          activeIngredientEn: drug.activeIngredientEn
-        }));
-    }
 
-    // Limit to top 10 suggestions
-    setSuggestions(filteredSuggestions.slice(0, 10));
-    setIsVisible(filteredSuggestions.length > 0);
+      // Limit to top 10 suggestions
+      setSuggestions(filteredSuggestions.slice(0, 10));
+      setIsVisible(filteredSuggestions.length > 0);
+    };
+
+    // Call the async function
+    fetchSuggestions();
   }, [searchTerm, alternativesFor]);
 
   // Close suggestions when clicking outside

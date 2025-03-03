@@ -1,3 +1,4 @@
+
 import { Drug, Alternative, SearchQuery } from "@/types";
 
 const drugsData: Drug[] = [
@@ -236,8 +237,8 @@ export const searchDrugs = async (searchTerm: string): Promise<Drug[]> => {
   });
 };
 
-// Function to get all drugs
-export const getAllDrugs = async (): Promise<Drug[]> => {
+// Function to get all drugs - changed to return the array directly
+export const getAllDrugs = (): Drug[] => {
   return drugsData;
 };
 

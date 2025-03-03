@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useContext } from 'react';
 import { LanguageContext } from '@/App';
@@ -40,16 +41,27 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
     }
 
     try {
-      const results = await importDrugsFromCSV(csvFile);
+      // Fetch the existing drugs first
+      const existingDrugs = await getAllDrugs();
       
-      // Fetch all drugs after importing
-      const updatedDrugs = await getAllDrugs();
-      
-      onImportSuccess(updatedDrugs);
-
-      toast({
-        title: translations.importSuccess,
-      });
+      // Call importDrugsFromCSV with all required arguments
+      importDrugsFromCSV(
+        csvFile, 
+        existingDrugs, 
+        (updatedDrugs) => {
+          onImportSuccess(updatedDrugs);
+          toast({
+            title: translations.importSuccess,
+          });
+        },
+        (error) => {
+          console.error('Import error:', error);
+          toast({
+            title: translations.importError,
+            variant: 'destructive',
+          });
+        }
+      );
     } catch (error) {
       console.error('Import error:', error);
       toast({
