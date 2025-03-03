@@ -1,10 +1,9 @@
-
 import { useContext, useState } from "react";
 import { Link } from "react-router-dom";
 import MediSwitchLogo from "./MediSwitchLogo";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { AppLanguage } from "@/types";
-import { Menu, X, Pills, Pill, Calculator, Info } from "lucide-react";
+import { Menu, X, Pill, Calculator, Info } from "lucide-react";
 import { LanguageContext } from "@/App";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
@@ -40,7 +39,7 @@ const Header: React.FC<HeaderProps> = ({
         <div className="flex justify-between items-center py-3">
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
-              <Pills className="text-pharma-primary h-8 w-8 mr-2 rtl:ml-2 rtl:mr-0" />
+              <Pill className="text-pharma-primary h-8 w-8 mr-2 rtl:ml-2 rtl:mr-0" />
               <span className="text-lg font-semibold text-pharma-primary">MediSwitch</span>
             </Link>
           </div>
@@ -51,7 +50,6 @@ const Header: React.FC<HeaderProps> = ({
               currentLanguage={language}
             />
             
-            {/* الأيقونة لفتح القائمة الجانبية */}
             <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <SheetTrigger asChild>
                 <button 
