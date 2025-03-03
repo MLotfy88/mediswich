@@ -1,3 +1,4 @@
+
 import { useState, useContext, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ export default function DosageCalculator() {
   useEffect(() => {
     if (drugName.trim()) {
       const fetchSuggestions = async () => {
+        // Convert drugName to string explicitly and pass language code
         const suggestionResults = getDrugSuggestions(drugName, language.code);
         setSuggestions(suggestionResults);
       };

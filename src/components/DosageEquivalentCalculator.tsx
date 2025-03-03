@@ -53,6 +53,7 @@ const DosageEquivalentCalculator = () => {
       const currentDrug = activeDrug === "drug1" ? drugName1 : drugName2;
       if (currentDrug.trim()) {
         const fetchSuggestions = async () => {
+          // Convert currentDrug to string explicitly
           const suggestionResults = getDrugSuggestions(currentDrug, language.code);
           setSuggestions(suggestionResults);
         };

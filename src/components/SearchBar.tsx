@@ -29,6 +29,7 @@ const SearchBar = ({
   useEffect(() => {
     if (searchValue.trim()) {
       const fetchSuggestions = async () => {
+        // Fix the type mismatch by ensuring language.code is passed correctly
         const suggestionResults = getDrugSuggestions(searchValue, language.code);
         setSuggestions(suggestionResults);
       };

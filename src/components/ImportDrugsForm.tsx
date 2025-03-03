@@ -1,127 +1,77 @@
+import React, { useState } from 'react';
+import { useContext } from 'react';
+import { LanguageContext } from '@/App';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import { importDrugsFromCSV } from '@/utils/importDrugs';
+import { getAllDrugs } from '@/services/drugService';
+import { Drug } from '@/types';
 
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { importDrugsFromCSV } from "@/utils/importDrugs";
-import { useToast } from "@/components/ui/use-toast";
-import { UploadCloud, FileText } from "lucide-react";
-import { Drug } from "@/types";
-import { updateCustomDrugs } from "@/services/drugService";
+interface ImportDrugsFormProps {
+  onImportSuccess: (updatedDrugs: Drug[]) => void;
+}
 
-export default function ImportDrugsForm() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) => {
+  const { language } = useContext(LanguageContext);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
   const { toast } = useToast();
-  
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    
-    // حفظ اسم الملف المحدد للعرض
-    setSelectedFile(file);
+
+  const translations = {
+    selectFile: language.code === 'ar' ? 'اختر ملف CSV' : 'Select CSV File',
+    import: language.code === 'ar' ? 'استيراد' : 'Import',
+    importSuccess: language.code === 'ar' ? 'تم استيراد البيانات بنجاح' : 'Data imported successfully',
+    importError: language.code === 'ar' ? 'حدث خطأ أثناء الاستيراد' : 'An error occurred during import',
+    noFileSelected: language.code === 'ar' ? 'الرجاء تحديد ملف CSV' : 'Please select a CSV file',
   };
-  
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files && event.target.files[0];
+    setCsvFile(file || null);
+  };
+
   const handleImport = async () => {
-    if (!selectedFile) {
+    if (!csvFile) {
       toast({
-        title: "لم يتم اختيار ملف",
-        description: "الرجاء اختيار ملف CSV أولاً",
-        variant: "destructive",
+        title: translations.noFileSelected,
+        variant: 'destructive',
       });
       return;
     }
-    
-    setIsLoading(true);
-    
+
     try {
-      // Call importDrugsFromCSV with the existing drugs (empty array for now)
-      importDrugsFromCSV(
-        selectedFile,
-        [], // existingDrugs - we'll get these from drugService in a real implementation
-        (updatedDrugs) => {
-          // Success callback
-          updateCustomDrugs(updatedDrugs);
-          toast({
-            title: "تم الاستيراد بنجاح",
-            description: `تم استيراد ${updatedDrugs.length} دواء إلى قاعدة البيانات`,
-            variant: "default",
-          });
-          // Reset selected file after success
-          setSelectedFile(null);
-        },
-        (error) => {
-          // Error callback
-          toast({
-            title: "فشل الاستيراد",
-            description: `حدث خطأ أثناء استيراد البيانات: ${error}`,
-            variant: "destructive",
-          });
-        }
-      );
-    } catch (error) {
-      console.error("خطأ في استيراد البيانات:", error);
+      const results = await importDrugsFromCSV(csvFile);
+      
+      // Fetch all drugs after importing
+      const updatedDrugs = await getAllDrugs();
+      
+      onImportSuccess(updatedDrugs);
+
       toast({
-        title: "فشل الاستيراد",
-        description: `حدث خطأ أثناء استيراد البيانات: ${(error as Error).message}`,
-        variant: "destructive",
+        title: translations.importSuccess,
       });
-    } finally {
-      setIsLoading(false);
+    } catch (error) {
+      console.error('Import error:', error);
+      toast({
+        title: translations.importError,
+        variant: 'destructive',
+      });
     }
   };
-  
+
   return (
-    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-      <h3 className="text-lg font-semibold mb-4" dir="rtl">استيراد بيانات الأدوية</h3>
-      
-      <div className="space-y-4" dir="rtl">
-        <p className="text-sm text-gray-600">
-          قم بتحميل ملف CSV يحتوي على بيانات الأدوية لإضافتها إلى قاعدة البيانات.
-        </p>
-        
-        <p className="text-xs text-gray-500">
-          تنسيق CSV المتوقع: <br />
-          اسم المنتج,Product Name,المادة الفعالة,Active Ingredient,نوع الدواء,بلد المنشأ,الشركة المصنعة,السعر (EGP)
-        </p>
-        
-        <div className="flex flex-col space-y-3">
-          <div className="flex items-center space-x-2 rtl:space-x-reverse">
-            <input
-              type="file"
-              id="csvFile"
-              accept=".csv"
-              className="hidden"
-              onChange={handleFileUpload}
-              disabled={isLoading}
-            />
-            <label
-              htmlFor="csvFile"
-              className={`flex items-center py-2 px-4 rounded-md text-white font-medium cursor-pointer bg-pharma-primary hover:bg-pharma-primary/90 transition-colors
-                ${isLoading ? "opacity-70 cursor-not-allowed" : ""}`}
-            >
-              <FileText className="ml-2 rtl:mr-2 rtl:ml-0" size={18} />
-              اختر ملف CSV
-            </label>
-          </div>
-          
-          {/* عرض اسم الملف المحدد */}
-          {selectedFile && (
-            <div className="text-sm text-gray-700 bg-gray-100 p-2 rounded-md flex items-center">
-              <FileText className="ml-2 text-gray-500" size={16} />
-              الملف المحدد: {selectedFile.name}
-            </div>
-          )}
-          
-          {/* زر رفع الملف */}
-          <Button
-            onClick={handleImport}
-            disabled={!selectedFile || isLoading}
-            className="bg-pharma-primary hover:bg-pharma-primary/90 w-full flex items-center justify-center"
-          >
-            <UploadCloud className="ml-2 rtl:mr-2 rtl:ml-0" size={18} />
-            {isLoading ? "جاري الاستيراد..." : "رفع الملف وتحديث البيانات"}
-          </Button>
-        </div>
-      </div>
+    <div className="space-y-4">
+      <Input
+        type="file"
+        accept=".csv"
+        onChange={handleFileChange}
+        className="w-full"
+      />
+      <Button onClick={handleImport} className="w-full" disabled={!csvFile}>
+        {translations.import}
+      </Button>
     </div>
   );
-}
+};
+
+export default ImportDrugsForm;
