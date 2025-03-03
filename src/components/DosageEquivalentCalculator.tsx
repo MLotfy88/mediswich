@@ -103,7 +103,7 @@ const DosageEquivalentCalculator = () => {
 
     // Simple equivalent dose calculation (for demonstration)
     // In a real app, this would use drug-specific conversion factors
-    const dose1Num = Number(dose1);
+    const dose1Num = typeof dose1 === 'number' ? dose1 : Number(dose1);
     
     // Sample calculation - in a real app this would use a database of conversion factors
     const conversionFactor = 1.2; // Just a sample factor

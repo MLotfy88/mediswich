@@ -1,24 +1,20 @@
 
 import { useEffect, useState, useContext } from "react";
-import { Drug, FilterOptions, AppLanguage } from "@/types";
-import { filterDrugs, calculateSavings } from "@/services/drugService";
-import { Pill, ShieldCheck, Stethoscope } from "lucide-react";
+import { Drug, SearchQuery } from "@/types";
+import { filterDrugs } from "@/services/drugService";
+import { Pill } from "lucide-react";
 import NoResults from "./NoResults";
 import { LanguageContext } from "@/App";
 import DrugCard from "./DrugCard";
 
 interface SearchResultsProps {
   results: Drug[];
-  filterOptions: FilterOptions;
-  searchQuery: string;
-  isVisible: boolean;
+  searchQuery: SearchQuery;
 }
 
 export default function SearchResults({ 
   results, 
-  filterOptions, 
-  searchQuery, 
-  isVisible
+  searchQuery
 }: SearchResultsProps) {
   const { language } = useContext(LanguageContext);
   const [filteredResults, setFilteredResults] = useState<Drug[]>([]);
@@ -33,35 +29,18 @@ export default function SearchResults({
     emptyResultsTitle: language.code === 'ar' ? "لم يتم العثور على نتائج" : "No Results Found",
     emptyResultsDesc: language.code === 'ar' 
       ? "لم نتمكن من العثور على أدوية تطابق استعلام البحث الخاص بك. يرجى تجربة كلمات رئيسية مختلفة."
-      : "We couldn't find any medications matching your search query. Please try different keywords.",
-    price: language.code === 'ar' ? "السعر" : "Price",
-    egp: language.code === 'ar' ? "ج.م" : "EGP",
-    save: language.code === 'ar' ? "توفير" : "Save",
-    available: language.code === 'ar' ? "متوفر" : "Available",
-    unavailable: language.code === 'ar' ? "غير متوفر" : "Unavailable",
-    compareTo: language.code === 'ar' ? "بالمقارنة مع" : "compared to",
-    origin: language.code === 'ar' ? "المنشأ" : "Origin",
-    egyptian: language.code === 'ar' ? "مصري" : "Egyptian",
-    activeIngredient: language.code === 'ar' ? "المادة الفعالة" : "Active Ingredient",
-    company: language.code === 'ar' ? "الشركة" : "Company"
+      : "We couldn't find any medications matching your search query. Please try different keywords."
   };
 
   // معالجة النتائج وتحديد الأدوية الرئيسية والبدائل
   useEffect(() => {
     const processResults = () => {
-      // فلترة النتائج وفقًا للمرشحات المحددة
-      const filtered = filterDrugs(
-        results, 
-        filterOptions.country, 
-        filterOptions.priceRange, 
-        filterOptions.availability
-      );
-      
-      setFilteredResults(filtered);
+      // Use results directly as they're already filtered by the searchDrugs function
+      setFilteredResults(results);
       
       // تحديد الدواء الرئيسي والبدائل
-      if (filtered.length > 0) {
-        const main = filtered[0];
+      if (results.length > 0) {
+        const main = results[0];
         setMainDrug(main);
         
         // جمع البدائل من الأدوية المصفاة وإضافة البدائل من الدواء الرئيسي
@@ -77,7 +56,7 @@ export default function SearchResults({
             };
             
             // فحص ما إذا كان البديل موجود في النتائج المصفاة
-            const isDuplicate = filtered.slice(1).some(drug => drug.id === alt.id);
+            const isDuplicate = results.slice(1).some(drug => drug.id === alt.id);
             
             if (!isDuplicate) {
               altDrugs.push(fullAlt);
@@ -86,7 +65,7 @@ export default function SearchResults({
         }
         
         // إضافة باقي الأدوية من النتائج المصفاة
-        filtered.slice(1).forEach(drug => {
+        results.slice(1).forEach(drug => {
           altDrugs.push(drug);
         });
         
@@ -98,10 +77,8 @@ export default function SearchResults({
     };
     
     processResults();
-  }, [results, filterOptions]);
+  }, [results]);
 
-  if (!isVisible) return null;
-  
   if (filteredResults.length === 0) {
     return <NoResults 
       title={translations.emptyResultsTitle}
@@ -115,7 +92,7 @@ export default function SearchResults({
         className="text-xl font-bold text-pharma-primary mb-6"
         dir={language.direction}
       >
-        {translations.resultsFor} "{searchQuery}" ({filteredResults.length})
+        {translations.resultsFor} "{searchQuery.term}" ({filteredResults.length})
       </h2>
       
       {/* الدواء الرئيسي */}

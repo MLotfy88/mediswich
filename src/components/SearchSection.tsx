@@ -1,9 +1,8 @@
 
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext } from "react";
 import { LanguageContext } from "@/App";
-import { FilterOptions, Drug, SearchQuery } from "@/types";
+import { Drug, SearchQuery } from "@/types";
 import SearchResults from "./SearchResults";
-import FilterPanel from "./FilterPanel";
 import { getAllDrugs, searchDrugs } from "@/services/drugService";
 import ImportDrugsForm from "./ImportDrugsForm";
 import { Filter } from "lucide-react";
@@ -29,12 +28,6 @@ const SearchSection: React.FC<SearchSectionProps> = ({
 }) => {
   const { language } = useContext(LanguageContext);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [filterOptions, setFilterOptions] = useState<FilterOptions>({
-    country: null,
-    priceRange: { min: null, max: null },
-    availability: null,
-    drugType: null
-  });
   const [isLoading, setIsLoading] = useState(false);
 
   const translations = {
@@ -51,20 +44,13 @@ const SearchSection: React.FC<SearchSectionProps> = ({
     
     setIsLoading(true);
     try {
-      const results = await searchDrugs(query.term, filterOptions);
+      const results = await searchDrugs(query.term);
       setSearchResults(results);
       setShowResults(true);
     } catch (error) {
       console.error("Search error:", error);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleFilterChange = (newFilterOptions: FilterOptions) => {
-    setFilterOptions(newFilterOptions);
-    if (searchQuery.term.trim()) {
-      handleSearch(searchQuery);
     }
   };
 
@@ -103,13 +89,6 @@ const SearchSection: React.FC<SearchSectionProps> = ({
                   <Filter size={20} />
                 </Button>
               </div>
-              
-              {isFilterOpen && (
-                <FilterPanel 
-                  filterOptions={filterOptions}
-                  onFilterChange={handleFilterChange}
-                />
-              )}
             </div>
             
             {isLoading ? (
@@ -128,10 +107,7 @@ const SearchSection: React.FC<SearchSectionProps> = ({
             {/* Import Drug Data Form */}
             {!showResults && (
               <div className="mt-8 pt-4 border-t border-gray-200">
-                <ImportDrugsForm 
-                  onImportSuccess={handleDrugDataImport}
-                  existingDrugs={getAllDrugs()}
-                />
+                <ImportDrugsForm onImportSuccess={handleDrugDataImport} />
               </div>
             )}
           </div>

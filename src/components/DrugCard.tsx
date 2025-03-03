@@ -27,7 +27,10 @@ export default function DrugCard({ drug, isMain = false }: DrugCardProps) {
     company: language.code === 'ar' ? "الشركة" : "Company"
   };
 
-  const savings = calculateSavings(drug);
+  // Get savings as a number (percentage)
+  const savings = drug.alternatives && drug.alternatives.length > 0 
+    ? calculateSavings(drug, drug.alternatives[0])
+    : 0;
 
   return (
     <div 

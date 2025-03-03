@@ -1,4 +1,3 @@
-
 import { Drug, FilterOptions, SearchQuery, Alternative, DrugSuggestion } from '@/types';
 import * as mockDrugs from '@/data/mockDrugs';
 import { findDrugByNameOrIngredient } from '@/utils/drugDataUtils';
@@ -85,20 +84,19 @@ export const getAlternativeDrugSuggestions = (
   }));
 };
 
-// Calculate price savings between original and alternative drug
-export const calculateSavings = (originalDrug: Drug, alternativeDrug: Drug | Alternative): { amount: number, percentage: number } => {
-  if (originalDrug.price <= 0 || alternativeDrug.price <= 0) {
-    return { amount: 0, percentage: 0 };
+// Calculate price savings percentage compared to alternative
+export function calculateSavings(drug: Drug, alternative?: Alternative): number {
+  if (!alternative) {
+    return 0;
   }
   
-  const savingsAmount = originalDrug.price - alternativeDrug.price;
-  const savingsPercentage = (savingsAmount / originalDrug.price) * 100;
+  if (drug.price <= alternative.price) {
+    return 0;
+  }
   
-  return {
-    amount: savingsAmount > 0 ? savingsAmount : 0,
-    percentage: savingsPercentage > 0 ? savingsPercentage : 0
-  };
-};
+  const savings = ((alternative.price - drug.price) / alternative.price) * 100;
+  return Math.abs(Math.round(savings));
+}
 
 // Filter drugs based on criteria
 export const filterDrugs = (drugs: Drug[], filters: FilterOptions): Drug[] => {
