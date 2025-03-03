@@ -44,6 +44,7 @@ const SearchSection: React.FC<SearchSectionProps> = ({
     
     setIsLoading(true);
     try {
+      // Now correctly passes the SearchQuery.term value
       const results = await searchDrugs(query.term);
       setSearchResults(results);
       setShowResults(true);

@@ -3,7 +3,7 @@ import { Drug, SearchQuery, DrugSuggestion } from "@/types";
 import { drugsData } from "./data/mockDrugs";
 
 // Function to search drugs by name or active ingredient
-export const searchDrugs = async (searchTerm: string): Promise<Drug[]> => {
+export const searchDrugs = (searchTerm: string): Drug[] => {
   const lowerSearchTerm = searchTerm.toLowerCase();
   return drugsData.filter((drug) => {
     const lowerName = drug.name.toLowerCase();
