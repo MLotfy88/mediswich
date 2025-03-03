@@ -1,9 +1,11 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { importDrugsFromCSV } from "@/data/drugs/importedDrugs";
-import { useToast } from "@/hooks/use-toast";
+import { importDrugsFromCSV } from "@/utils/importDrugs";
+import { useToast } from "@/components/ui/use-toast";
 import { UploadCloud, FileText } from "lucide-react";
+import { Drug } from "@/types";
+import { updateCustomDrugs } from "@/services/drugService";
 
 export default function ImportDrugsForm() {
   const [isLoading, setIsLoading] = useState(false);
@@ -31,22 +33,30 @@ export default function ImportDrugsForm() {
     setIsLoading(true);
     
     try {
-      // قراءة محتوى الملف
-      const content = await selectedFile.text();
-      console.log("Imported CSV content (first 100 chars):", content.substring(0, 100) + "...");
-      
-      // استدعاء وظيفة الاستيراد
-      const importedDrugs = importDrugsFromCSV(content);
-      
-      toast({
-        title: "تم الاستيراد بنجاح",
-        description: `تم استيراد ${importedDrugs.length} دواء إلى قاعدة البيانات`,
-        variant: "default",
-      });
-      
-      // إعادة تعيين الملف المحدد بعد النجاح
-      setSelectedFile(null);
-      
+      // Call importDrugsFromCSV with the existing drugs (empty array for now)
+      importDrugsFromCSV(
+        selectedFile,
+        [], // existingDrugs - we'll get these from drugService in a real implementation
+        (updatedDrugs) => {
+          // Success callback
+          updateCustomDrugs(updatedDrugs);
+          toast({
+            title: "تم الاستيراد بنجاح",
+            description: `تم استيراد ${updatedDrugs.length} دواء إلى قاعدة البيانات`,
+            variant: "default",
+          });
+          // Reset selected file after success
+          setSelectedFile(null);
+        },
+        (error) => {
+          // Error callback
+          toast({
+            title: "فشل الاستيراد",
+            description: `حدث خطأ أثناء استيراد البيانات: ${error}`,
+            variant: "destructive",
+          });
+        }
+      );
     } catch (error) {
       console.error("خطأ في استيراد البيانات:", error);
       toast({

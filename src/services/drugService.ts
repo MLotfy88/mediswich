@@ -1,10 +1,6 @@
 
-import { Drug, FilterOptions, SearchQuery } from '@/types';
-import { 
-  painRelievers, antibiotics, cardiovascular, gastrointestinal, 
-  psychotropics, cholesterolLowering, antiallergic, antidiabetic, 
-  hormones, specialMedications, importedDrugs
-} from '@/data/mockDrugs';
+import { Drug, FilterOptions, SearchQuery, Alternative, DrugSuggestion } from '@/types';
+import * as mockDrugs from '@/data/mockDrugs';
 import { findDrugByNameOrIngredient } from '@/utils/drugDataUtils';
 
 // In-memory store for imported drugs
@@ -12,21 +8,12 @@ let customDrugs: Drug[] = [];
 
 // Get all drugs from all sources
 export const getAllDrugs = (): Drug[] => {
-  // Combine all drug sources
-  return [
-    ...painRelievers,
-    ...antibiotics, 
-    ...cardiovascular,
-    ...gastrointestinal,
-    ...psychotropics,
-    ...cholesterolLowering,
-    ...antiallergic,
-    ...antidiabetic,
-    ...hormones,
-    ...specialMedications,
-    ...importedDrugs,
-    ...customDrugs
-  ];
+  // Combine all drug sources available as exports from mockDrugs
+  const allMockDrugs = Object.values(mockDrugs)
+    .filter(value => Array.isArray(value))
+    .flat() as Drug[];
+  
+  return [...allMockDrugs, ...customDrugs];
 };
 
 // Update custom drugs (for imported data)
@@ -34,30 +21,87 @@ export const updateCustomDrugs = (drugs: Drug[]): void => {
   customDrugs = drugs;
 };
 
-// Search drugs by name or active ingredient
-export const searchDrugs = async (
+// Retrieve drug suggestions based on search term
+export const getDrugSuggestions = (
   searchTerm: string,
-  filterOptions?: FilterOptions
-): Promise<Drug[]> => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 300));
+  limit: number = 10
+): DrugSuggestion[] => {
+  if (!searchTerm || searchTerm.trim() === '') return [];
   
-  // Get all drugs
-  let allDrugs = getAllDrugs();
+  const normalizedTerm = searchTerm.toLowerCase().trim();
+  const allDrugs = getAllDrugs();
   
-  // Search by name or active ingredient
-  let results = findDrugByNameOrIngredient(allDrugs, searchTerm);
-  
-  // Apply filters if provided
-  if (filterOptions) {
-    results = applyFilters(results, filterOptions);
-  }
-  
-  return results;
+  return allDrugs
+    .filter(drug => 
+      drug.name.toLowerCase().includes(normalizedTerm) ||
+      (drug.nameEn && drug.nameEn.toLowerCase().includes(normalizedTerm)) ||
+      drug.activeIngredient.toLowerCase().includes(normalizedTerm) ||
+      (drug.activeIngredientEn && drug.activeIngredientEn.toLowerCase().includes(normalizedTerm))
+    )
+    .slice(0, limit)
+    .map(drug => ({
+      id: drug.id,
+      name: drug.name,
+      nameEn: drug.nameEn,
+      activeIngredient: drug.activeIngredient,
+      activeIngredientEn: drug.activeIngredientEn
+    }));
 };
 
-// Apply filters to drug results
-const applyFilters = (drugs: Drug[], filters: FilterOptions): Drug[] => {
+// Get alternative drug suggestions for a specific drug
+export const getAlternativeDrugSuggestions = (
+  drugId: string,
+  searchTerm: string,
+  limit: number = 10
+): DrugSuggestion[] => {
+  const drug = getDrugById(drugId);
+  if (!drug) return [];
+  
+  // Find drugs with the same active ingredient
+  const allDrugs = getAllDrugs();
+  const drugsByIngredient = allDrugs.filter(d => 
+    d.id !== drugId && (
+      d.activeIngredient === drug.activeIngredient ||
+      d.activeIngredientEn === drug.activeIngredientEn
+    )
+  );
+  
+  // If there's a search term, filter by it
+  let result = drugsByIngredient;
+  if (searchTerm && searchTerm.trim() !== '') {
+    const normalizedTerm = searchTerm.toLowerCase().trim();
+    result = result.filter(d => 
+      d.name.toLowerCase().includes(normalizedTerm) ||
+      (d.nameEn && d.nameEn.toLowerCase().includes(normalizedTerm))
+    );
+  }
+  
+  return result.slice(0, limit).map(drug => ({
+    id: drug.id,
+    name: drug.name,
+    nameEn: drug.nameEn,
+    activeIngredient: drug.activeIngredient,
+    activeIngredientEn: drug.activeIngredientEn
+  }));
+};
+
+// Calculate price savings between original and alternative drug
+export const calculateSavings = (originalDrug: Drug, alternativeDrug: Drug | Alternative): { amount: number, percentage: number } => {
+  if (originalDrug.price <= 0 || alternativeDrug.price <= 0) {
+    return { amount: 0, percentage: 0 };
+  }
+  
+  const savingsAmount = originalDrug.price - alternativeDrug.price;
+  const savingsPercentage = (savingsAmount / originalDrug.price) * 100;
+  
+  return {
+    amount: savingsAmount > 0 ? savingsAmount : 0,
+    percentage: savingsPercentage > 0 ? savingsPercentage : 0
+  };
+};
+
+// Filter drugs based on criteria
+export const filterDrugs = (drugs: Drug[], filters: FilterOptions): Drug[] => {
   return drugs.filter(drug => {
     // Country filter
     if (filters.country && drug.country !== filters.country) {
@@ -87,6 +131,51 @@ const applyFilters = (drugs: Drug[], filters: FilterOptions): Drug[] => {
     
     return true;
   });
+};
+
+// Search drugs by name or active ingredient
+export const searchDrugs = async (
+  query: SearchQuery,
+  filterOptions?: FilterOptions
+): Promise<Drug[]> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 300));
+  
+  // Get all drugs
+  let allDrugs = getAllDrugs();
+  
+  // Search by name or active ingredient based on the query type
+  let results: Drug[] = [];
+  
+  if (!query.term || query.term.trim() === '') {
+    return [];
+  }
+  
+  switch (query.by) {
+    case 'name':
+      results = allDrugs.filter(drug => 
+        drug.name.toLowerCase().includes(query.term.toLowerCase()) ||
+        (drug.nameEn && drug.nameEn.toLowerCase().includes(query.term.toLowerCase()))
+      );
+      break;
+    case 'activeIngredient':
+      results = allDrugs.filter(drug => 
+        drug.activeIngredient.toLowerCase().includes(query.term.toLowerCase()) ||
+        (drug.activeIngredientEn && drug.activeIngredientEn.toLowerCase().includes(query.term.toLowerCase()))
+      );
+      break;
+    case 'all':
+    default:
+      results = findDrugByNameOrIngredient(allDrugs, query.term);
+      break;
+  }
+  
+  // Apply filters if provided
+  if (filterOptions) {
+    results = filterDrugs(results, filterOptions);
+  }
+  
+  return results;
 };
 
 // Get a single drug by ID
