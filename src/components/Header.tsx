@@ -1,3 +1,4 @@
+
 import { useContext, useState } from "react";
 import { Link } from "react-router-dom";
 import MediSwitchLogo from "./MediSwitchLogo";
@@ -6,6 +7,7 @@ import { AppLanguage } from "@/types";
 import { Menu, X, Pill, Calculator, Info } from "lucide-react";
 import { LanguageContext } from "@/App";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "./ui/button";
 
 interface HeaderProps {
   onLanguageChange?: (language: AppLanguage) => void;
@@ -52,12 +54,14 @@ const Header: React.FC<HeaderProps> = ({
             
             <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <SheetTrigger asChild>
-                <button 
-                  className="flex items-center text-pharma-primary p-2 rounded-md hover:bg-pharma-primary/10 transition-colors"
+                <Button 
+                  variant="ghost"
+                  size="icon"
+                  className="text-pharma-primary p-2 rounded-md hover:bg-pharma-primary/10 transition-colors"
                   aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
                 >
                   <Menu size={24} />
-                </button>
+                </Button>
               </SheetTrigger>
               
               <SheetContent

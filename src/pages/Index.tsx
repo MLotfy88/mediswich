@@ -1,16 +1,19 @@
 
-import { useState, useEffect, useContext } from "react";
+import { useState, useContext } from "react";
 import { LanguageContext } from "@/App";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Hero from "@/components/Hero";
 import SearchSection from "@/components/SearchSection";
 import HowItWorksSection from "@/components/HowItWorksSection";
-import { Drug, AppLanguage } from "@/types";
+import { Drug, AppLanguage, SearchQuery } from "@/types";
 
 export default function Index() {
   const { language, setLanguage } = useContext(LanguageContext);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState<SearchQuery>({
+    term: "",
+    by: "all"
+  });
   const [searchResults, setSearchResults] = useState<Drug[]>([]);
   const [showResults, setShowResults] = useState(false);
 
@@ -26,7 +29,7 @@ export default function Index() {
         {/* Hero Section */}
         <Hero />
 
-        {/* البحث والمرشحات */}
+        {/* بحث عن بدائل */}
         <SearchSection 
           showResults={showResults}
           setShowResults={setShowResults}

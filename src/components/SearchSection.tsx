@@ -1,184 +1,137 @@
 
-import { useState, useEffect, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { LanguageContext } from "@/App";
-import SearchBar from "@/components/SearchBar";
-import FilterPanel from "@/components/FilterPanel";
-import SearchResults from "@/components/SearchResults";
-import ImportDrugsForm from "@/components/ImportDrugsForm";
-import { searchDrugs } from "@/services/drugService";
-import { Drug, FilterOptions } from "@/types";
-import DrugCard from "@/components/DrugCard";
-import { useToast } from "@/hooks/use-toast";
-import { X, Filter } from "lucide-react";
+import { FilterOptions, Drug, SearchQuery } from "@/types";
+import SearchResults from "./SearchResults";
+import FilterPanel from "./FilterPanel";
+import { getAllDrugs, searchDrugs } from "@/services/drugService";
+import ImportDrugsForm from "./ImportDrugsForm";
+import { Filter } from "lucide-react";
 import { Button } from "./ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
+import SearchBarWithSuggestions from "./SearchBarWithSuggestions";
 
 interface SearchSectionProps {
   showResults: boolean;
   setShowResults: (show: boolean) => void;
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
+  searchQuery: SearchQuery;
+  setSearchQuery: (query: SearchQuery) => void;
   searchResults: Drug[];
   setSearchResults: (results: Drug[]) => void;
 }
 
-export default function SearchSection({ 
-  showResults, 
-  setShowResults, 
-  searchQuery, 
+const SearchSection: React.FC<SearchSectionProps> = ({
+  showResults,
+  setShowResults,
+  searchQuery,
   setSearchQuery,
   searchResults,
   setSearchResults
-}: SearchSectionProps) {
+}) => {
   const { language } = useContext(LanguageContext);
-  const [popularDrugs, setPopularDrugs] = useState<Drug[]>([]);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
-    country: 'all',
-    priceRange: {
-      min: 0,
-      max: 1000
-    },
-    availability: null
+    country: null,
+    priceRange: { min: null, max: null },
+    availability: null,
+    drugType: null
   });
-  const [showFilter, setShowFilter] = useState(false);
-  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    // Load some popular drugs for display before search
-    const sampleDrugs = searchDrugs("", language.code).slice(0, 6);
-    setPopularDrugs(sampleDrugs);
-  }, [language.code]);
+  const translations = {
+    searchPlaceholder: language.code === 'ar' 
+      ? 'ابحث عن الأدوية أو المادة الفعالة...' 
+      : 'Search for medications or active ingredients...',
+    filters: language.code === 'ar' ? 'الفلاتر' : 'Filters',
+    noResults: language.code === 'ar' ? 'لا توجد نتائج' : 'No results found',
+    importData: language.code === 'ar' ? 'استيراد بيانات الأدوية' : 'Import Drug Data',
+  };
 
-  const handleSearch = (query: string) => {
-    if (!query.trim()) {
-      toast({
-        title: language.code === 'ar' ? 'حقل البحث فارغ' : 'Empty search field',
-        description: language.code === 'ar' 
-          ? 'يرجى إدخال اسم دواء للبحث عنه' 
-          : 'Please enter a medication name to search',
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const results = searchDrugs(query, language.code);
-    setSearchQuery(query);
-    setSearchResults(results);
-    setShowResults(true);
-
-    if (results.length === 0) {
-      toast({
-        title: language.code === 'ar' ? 'لم يتم العثور على نتائج' : 'No results found',
-        description: language.code === 'ar'
-          ? `لم نتمكن من العثور على "${query}" في قاعدة البيانات`
-          : `We couldn't find "${query}" in our database`,
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: language.code === 'ar' ? 'تم العثور على النتائج' : 'Results found',
-        description: language.code === 'ar'
-          ? `تم العثور على ${results.length} نتيجة لـ "${query}"`
-          : `Found ${results.length} results for "${query}"`,
-      });
+  const handleSearch = async (query: SearchQuery) => {
+    if (!query.term.trim()) return;
+    
+    setIsLoading(true);
+    try {
+      const results = await searchDrugs(query.term, filterOptions);
+      setSearchResults(results);
+      setShowResults(true);
+    } catch (error) {
+      console.error("Search error:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleFilterChange = (newFilters: FilterOptions) => {
-    setFilterOptions(newFilters);
+  const handleFilterChange = (newFilterOptions: FilterOptions) => {
+    setFilterOptions(newFilterOptions);
+    if (searchQuery.term.trim()) {
+      handleSearch(searchQuery);
+    }
   };
 
   const toggleFilter = () => {
-    setShowFilter(!showFilter);
+    setIsFilterOpen(!isFilterOpen);
   };
 
-  // ترجمات حسب اللغة الحالية
-  const translations = {
-    searchPlaceholder: language.code === 'ar' ? 'ابحث عن اسم الدواء أو المادة الفعالة...' : 'Search by medication name or active ingredient...',
-    filters: language.code === 'ar' ? 'المرشحات' : 'Filters',
-    popularDrugs: language.code === 'ar' ? 'أدوية شائعة' : 'Popular Medications',
-    importData: language.code === 'ar' ? 'استيراد البيانات' : 'Import Data',
+  const handleDrugDataImport = (updatedDrugs: Drug[]) => {
+    // If we have a search term, refresh the search results
+    if (searchQuery.term.trim()) {
+      handleSearch(searchQuery);
+    }
   };
 
   return (
-    <section id="search" className="py-12 md:py-16">
+    <section className="py-8 bg-white">
       <div className="container mx-auto px-4">
-        <div className="mb-8">
-          <SearchBar 
-            onSearch={handleSearch} 
-            placeholder={translations.searchPlaceholder}
-            onFilterToggle={toggleFilter}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* مرشحات البحث للأجهزة الكبيرة */}
-          <div className="lg:col-span-1 hidden lg:block">
-            <h2 
-              className="text-lg font-semibold mb-4 text-pharma-primary"
-              dir={language.direction}
-            >
-              {translations.filters}
-            </h2>
-            <FilterPanel onFilterChange={handleFilterChange} />
-            
-            {/* إضافة مكون استيراد البيانات */}
-            <div className="mt-6">
-              <h2 
-                className="text-lg font-semibold mb-4 text-pharma-primary"
-                dir={language.direction}
-              >
-                {translations.importData}
-              </h2>
-              <ImportDrugsForm />
-            </div>
-          </div>
-
-          {/* مرشحات البحث للأجهزة الصغيرة (عبر شيت جانبي) */}
-          <Sheet open={showFilter} onOpenChange={setShowFilter}>
-            <SheetContent side={language.direction === 'rtl' ? 'right' : 'left'} className="w-[90%] sm:w-[350px] overflow-y-auto">
-              <div className="pt-8 h-full overflow-y-auto">
-                <FilterPanel 
-                  onFilterChange={handleFilterChange} 
-                  onClose={() => setShowFilter(false)}
+        <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-sm p-6">
+          <div className="space-y-4">
+            <div className="flex flex-col space-y-2">
+              <div className="flex items-center justify-between">
+                <SearchBarWithSuggestions
+                  onSearch={handleSearch}
+                  placeholder={translations.searchPlaceholder}
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
                 />
                 
-                <div className="mt-6">
-                  <h2 
-                    className="text-lg font-semibold mb-4 text-pharma-primary"
-                    dir={language.direction}
-                  >
-                    {translations.importData}
-                  </h2>
-                  <ImportDrugsForm />
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
-
-          {/* نتائج البحث */}
-          <div className="lg:col-span-3">
-            <SearchResults 
-              results={searchResults}
-              filterOptions={filterOptions}
-              searchQuery={searchQuery}
-              isVisible={showResults}
-            />
-
-            {/* عرض الأدوية الشائعة عندما لا تكون هناك نتائج بحث */}
-            {!showResults && (
-              <div>
-                <h2 
-                  className="text-xl font-bold text-pharma-primary mb-6"
-                  dir={language.direction}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={toggleFilter}
+                  className={`ml-2 ${isFilterOpen ? 'bg-pharma-primary/10' : ''}`}
+                  aria-label={translations.filters}
                 >
-                  {translations.popularDrugs}
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {popularDrugs.map((drug) => (
-                    <DrugCard key={drug.id} drug={drug} />
-                  ))}
-                </div>
+                  <Filter size={20} />
+                </Button>
+              </div>
+              
+              {isFilterOpen && (
+                <FilterPanel 
+                  filterOptions={filterOptions}
+                  onFilterChange={handleFilterChange}
+                />
+              )}
+            </div>
+            
+            {isLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-pharma-primary"></div>
+              </div>
+            ) : (
+              showResults && (
+                <SearchResults 
+                  results={searchResults}
+                  searchQuery={searchQuery}
+                />
+              )
+            )}
+            
+            {/* Import Drug Data Form */}
+            {!showResults && (
+              <div className="mt-8 pt-4 border-t border-gray-200">
+                <ImportDrugsForm 
+                  onImportSuccess={handleDrugDataImport}
+                  existingDrugs={getAllDrugs()}
+                />
               </div>
             )}
           </div>
@@ -186,4 +139,6 @@ export default function SearchSection({
       </div>
     </section>
   );
-}
+};
+
+export default SearchSection;

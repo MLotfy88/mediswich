@@ -35,6 +35,7 @@ export interface FilterOptions {
     max: number | null;
   };
   availability?: string | null;
+  drugType?: string | null;
 }
 
 export interface AppLanguage {
@@ -63,4 +64,17 @@ export interface EquivalentDosage {
     unit: string;
   };
   conversionRatio: number;
+}
+
+export interface DrugSuggestion {
+  id: string;
+  name: string;
+  nameEn?: string;
+  activeIngredient: string;
+  activeIngredientEn?: string;
+}
+
+export interface SearchQuery {
+  term: string;
+  by: 'name' | 'activeIngredient' | 'all';
 }

@@ -1,203 +1,134 @@
 
-import { Drug, FilterOptions, AppLanguage } from "@/types";
-import { antibiotics } from "@/data/drugs/antibiotics";
-import { painRelievers } from "@/data/drugs/painRelievers";
-import { cholesterolLowering } from "@/data/drugs/cholesterolLowering";
-import { cardiovascular } from "@/data/drugs/cardiovascular";
-import { psychotropics } from "@/data/drugs/psychotropics";
-import { hormones } from "@/data/drugs/hormones";
-import { gastrointestinal } from "@/data/drugs/gastrointestinal";
-import { antiallergic } from "@/data/drugs/antiallergic";
-import { antidiabetic } from "@/data/drugs/antidiabetic";
-import { specialMedications } from "@/data/drugs/specialMedications";
-import { webTebMedications } from "@/data/drugs/webTebMedications";
-import { altibbiMedications } from "@/data/drugs/altibbiMedications";
-import { edaMedications } from "@/data/drugs/edaMedications";
-import { importedDrugs, setAlternativesForDrugs } from "@/data/drugs/importedDrugs";
+import { Drug, FilterOptions, SearchQuery } from '@/types';
+import { 
+  painRelievers, antibiotics, cardiovascular, gastrointestinal, 
+  psychotropics, cholesterolLowering, antiallergic, antidiabetic, 
+  hormones, specialMedications, importedDrugs
+} from '@/data/mockDrugs';
+import { findDrugByNameOrIngredient } from '@/utils/drugDataUtils';
 
-// الحصول على جميع الأدوية من كافة المصادر
+// In-memory store for imported drugs
+let customDrugs: Drug[] = [];
+
+// Get all drugs from all sources
 export const getAllDrugs = (): Drug[] => {
-  // تحديث البدائل للأدوية المستوردة
-  setAlternativesForDrugs();
-  
-  // مجموعة شاملة من الأدوية من كافة الفئات
+  // Combine all drug sources
   return [
-    ...antibiotics,
     ...painRelievers,
-    ...cholesterolLowering,
+    ...antibiotics, 
     ...cardiovascular,
-    ...psychotropics,
-    ...hormones,
     ...gastrointestinal,
+    ...psychotropics,
+    ...cholesterolLowering,
     ...antiallergic,
     ...antidiabetic,
+    ...hormones,
     ...specialMedications,
-    ...webTebMedications, 
-    ...altibbiMedications,
-    ...edaMedications,
-    ...importedDrugs
+    ...importedDrugs,
+    ...customDrugs
   ];
 };
 
-// البحث عن الأدوية والبدائل في البيانات
-export const searchDrugs = (query: string, lang: string = 'ar'): Drug[] => {
-  if (!query || query.length < 2) return [];
-
-  const normalizedQuery = query.toLowerCase().trim();
-  const allDrugs = getAllDrugs();
-  
-  // البحث في الأسماء الإنجليزية إذا كانت اللغة إنجليزية، وإلا البحث في الأسماء العربية
-  const searchResults = allDrugs.filter(drug => {
-    if (lang === 'en') {
-      // البحث في البيانات الإنجليزية
-      return (drug.nameEn || drug.name).toLowerCase().includes(normalizedQuery) || 
-             (drug.activeIngredientEn || drug.activeIngredient).toLowerCase().includes(normalizedQuery);
-    } else {
-      // البحث في البيانات العربية
-      return drug.name.toLowerCase().includes(normalizedQuery) || 
-             (drug.activeIngredient && drug.activeIngredient.toLowerCase().includes(normalizedQuery));
-    }
-  });
-
-  return searchResults;
+// Update custom drugs (for imported data)
+export const updateCustomDrugs = (drugs: Drug[]): void => {
+  customDrugs = drugs;
 };
 
-// البحث عن بدائل محددة لدواء معين
-export const findAlternativesForDrug = (drugId: string): Drug[] => {
-  const allDrugs = getAllDrugs();
-  const drug = allDrugs.find(d => d.id === drugId);
+// Search drugs by name or active ingredient
+export const searchDrugs = async (
+  searchTerm: string,
+  filterOptions?: FilterOptions
+): Promise<Drug[]> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 300));
   
+  // Get all drugs
+  let allDrugs = getAllDrugs();
+  
+  // Search by name or active ingredient
+  let results = findDrugByNameOrIngredient(allDrugs, searchTerm);
+  
+  // Apply filters if provided
+  if (filterOptions) {
+    results = applyFilters(results, filterOptions);
+  }
+  
+  return results;
+};
+
+// Apply filters to drug results
+const applyFilters = (drugs: Drug[], filters: FilterOptions): Drug[] => {
+  return drugs.filter(drug => {
+    // Country filter
+    if (filters.country && drug.country !== filters.country) {
+      return false;
+    }
+    
+    // Price range filter
+    if (filters.priceRange.min !== null && drug.price < filters.priceRange.min) {
+      return false;
+    }
+    if (filters.priceRange.max !== null && drug.price > filters.priceRange.max) {
+      return false;
+    }
+    
+    // Availability filter
+    if (filters.availability === 'available' && !drug.isAvailable) {
+      return false;
+    }
+    if (filters.availability === 'unavailable' && drug.isAvailable) {
+      return false;
+    }
+    
+    // Drug type filter
+    if (filters.drugType && drug.drugType !== filters.drugType) {
+      return false;
+    }
+    
+    return true;
+  });
+};
+
+// Get a single drug by ID
+export const getDrugById = (id: string): Drug | undefined => {
+  return getAllDrugs().find(drug => drug.id === id);
+};
+
+// Get drug alternatives
+export const getDrugAlternatives = (drugId: string): Drug[] => {
+  const drug = getDrugById(drugId);
   if (!drug) return [];
   
-  // البحث عن الأدوية التي تحتوي على نفس المادة الفعالة
-  return allDrugs.filter(d => 
-    d.id !== drug.id && 
-    d.activeIngredient.toLowerCase() === drug.activeIngredient.toLowerCase()
-  );
+  // Convert alternatives to Drug type for consistency
+  return drug.alternatives.map(alt => ({
+    ...alt,
+    alternatives: []
+  }));
 };
 
-// الحصول على بدائل محددة لدواء معين
-export const getAlternativesForDrug = (drugName: string): Drug[] => {
-  const allDrugs = getAllDrugs();
-  const drug = allDrugs.find(d => 
-    d.name.toLowerCase() === drugName.toLowerCase() || 
-    (d.nameEn && d.nameEn.toLowerCase() === drugName.toLowerCase())
-  );
-  
-  if (!drug) return [];
-  
-  // البحث عن الأدوية التي تحتوي على نفس المادة الفعالة
-  return allDrugs.filter(d => 
-    d.id !== drug.id && 
-    d.activeIngredient.toLowerCase() === drug.activeIngredient.toLowerCase()
-  );
+// Get drugs by type
+export const getDrugsByType = (type: string): Drug[] => {
+  return getAllDrugs().filter(drug => drug.drugType === type);
 };
 
-// حساب نسبة التوفير بالمقارنة مع السعر الأعلى
-export const calculateSavings = (drug: Drug): number => {
-  if (!drug.alternatives || drug.alternatives.length === 0) return 0;
-  
-  // Find the most expensive alternative
-  const mostExpensiveAlt = drug.alternatives.reduce((prev, current) => 
-    prev.price > current.price ? prev : current
-  );
-  
-  if (mostExpensiveAlt.price <= drug.price) return 0;
-  
-  // Calculate the savings percentage
-  const savingsPercentage = Math.round(((mostExpensiveAlt.price - drug.price) / mostExpensiveAlt.price) * 100);
-  return savingsPercentage;
-};
-
-// تطبيق المرشحات المحددة على نتائج البحث
-export const filterDrugs = (
-  drugs: Drug[], 
-  country?: string | null, 
-  priceRange?: { min: number | null; max: number | null },
-  availability?: string | null
-): Drug[] => {
-  let filtered = [...drugs];
-
-  // فلترة حسب بلد المنشأ
-  if (country && country !== 'all') {
-    if (country === 'egypt' || country === 'egyptian') {
-      filtered = filtered.filter(drug => drug.isEgyptian === true);
-    } else if (country === 'international') {
-      filtered = filtered.filter(drug => drug.isEgyptian === false);
-    } else {
-      filtered = filtered.filter(drug => drug.country === country);
-    }
-  }
-
-  // فلترة حسب نطاق السعر
-  if (priceRange && priceRange.min !== null && priceRange.max !== null) {
-    filtered = filtered.filter(drug => 
-      drug.price >= (priceRange.min || 0) && 
-      drug.price <= (priceRange.max || Number.MAX_SAFE_INTEGER)
-    );
-  }
-
-  // فلترة حسب التوافر
-  if (availability !== null && availability !== undefined) {
-    if (availability === 'available') {
-      filtered = filtered.filter(drug => drug.isAvailable === true);
-    } else if (availability === 'unavailable') {
-      filtered = filtered.filter(drug => drug.isAvailable === false);
-    }
-  }
-
-  return filtered;
-};
-
-// الحصول على اقتراحات للأدوية أثناء الكتابة
-export const getDrugSuggestions = (
-  query: string,
-  language: string = 'ar'
-): Array<{ id: string; name: string; nameInOtherLanguage?: string }> => {
-  if (!query || query.length < 2) return [];
-
-  const normalizedQuery = query.toLowerCase().trim();
-  const results: Array<{ id: string; name: string; nameInOtherLanguage?: string }> = [];
-  const foundDrugs = new Set<string>(); // لتجنب التكرار
-  const allDrugs = getAllDrugs();
-
-  allDrugs.forEach(drug => {
-    const nameToSearch = language === 'ar' ? drug.name : (drug.nameEn || drug.name);
-    const nameInOtherLanguage = language === 'ar' ? (drug.nameEn || drug.name) : drug.name;
-    
-    if (nameToSearch.toLowerCase().includes(normalizedQuery) && !foundDrugs.has(nameToSearch)) {
-      foundDrugs.add(nameToSearch);
-      results.push({
-        id: drug.id,
-        name: nameToSearch,
-        nameInOtherLanguage: nameInOtherLanguage !== nameToSearch ? nameInOtherLanguage : undefined
-      });
+// Get all drug types
+export const getAllDrugTypes = (): string[] => {
+  const types = new Set<string>();
+  getAllDrugs().forEach(drug => {
+    if (drug.drugType) {
+      types.add(drug.drugType);
     }
   });
-
-  return results.slice(0, 7); // إرجاع حد أقصى 7 اقتراحات
+  return Array.from(types);
 };
 
-// الحصول على اقتراحات للأدوية البديلة
-export const getAlternativeDrugSuggestions = (
-  drugName: string,
-  language: string = 'ar'
-): Array<{ id: string; name: string; nameInOtherLanguage?: string }> => {
-  if (!drugName || drugName.length < 2) return [];
-
-  const alternatives = getAlternativesForDrug(drugName);
-  const results: Array<{ id: string; name: string; nameInOtherLanguage?: string }> = [];
-  
-  alternatives.forEach(drug => {
-    const nameToShow = language === 'ar' ? drug.name : (drug.nameEn || drug.name);
-    const nameInOtherLanguage = language === 'ar' ? (drug.nameEn || drug.name) : drug.name;
-    
-    results.push({
-      id: drug.id,
-      name: nameToShow,
-      nameInOtherLanguage: nameInOtherLanguage !== nameToShow ? nameInOtherLanguage : undefined
-    });
+// Get all countries
+export const getAllCountries = (): string[] => {
+  const countries = new Set<string>();
+  getAllDrugs().forEach(drug => {
+    if (drug.country) {
+      countries.add(drug.country);
+    }
   });
-
-  return results.slice(0, 7); // إرجاع حد أقصى 7 اقتراحات
+  return Array.from(countries);
 };
