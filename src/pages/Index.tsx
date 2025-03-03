@@ -22,7 +22,7 @@ export default function Index() {
     <div className="min-h-screen flex flex-col bg-slate-50">
       <Header onLanguageChange={handleLanguageChange} currentLanguage={language} />
 
-      <main className="flex-grow">
+      <main className="flex-grow mt-16">
         {/* Hero Section */}
         <Hero />
 

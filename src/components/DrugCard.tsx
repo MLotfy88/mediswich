@@ -1,107 +1,94 @@
 
+import { useContext } from "react";
+import { LanguageContext } from "@/App";
 import { Drug } from "@/types";
 import { calculateSavings } from "@/services/drugService";
-import { Separator } from "@/components/ui/separator";
-import { Flag, CheckCircle, XCircle } from "lucide-react";
+import { ShieldCheck, Stethoscope } from "lucide-react";
 
 interface DrugCardProps {
   drug: Drug;
-  showAlternatives?: boolean;
+  isMain?: boolean;
 }
 
-export default function DrugCard({ drug, showAlternatives = true }: DrugCardProps) {
+export default function DrugCard({ drug, isMain = false }: DrugCardProps) {
+  const { language } = useContext(LanguageContext);
+
+  // الترجمات حسب اللغة
+  const translations = {
+    price: language.code === 'ar' ? "السعر" : "Price",
+    egp: language.code === 'ar' ? "ج.م" : "EGP",
+    save: language.code === 'ar' ? "توفير" : "Save",
+    available: language.code === 'ar' ? "متوفر" : "Available",
+    unavailable: language.code === 'ar' ? "غير متوفر" : "Unavailable",
+    compareTo: language.code === 'ar' ? "بالمقارنة مع" : "compared to",
+    origin: language.code === 'ar' ? "المنشأ" : "Origin",
+    egyptian: language.code === 'ar' ? "مصري" : "Egyptian",
+    activeIngredient: language.code === 'ar' ? "المادة الفعالة" : "Active Ingredient",
+    company: language.code === 'ar' ? "الشركة" : "Company"
+  };
+
   const savings = calculateSavings(drug);
-  
+
   return (
     <div 
-      className={`bg-pharma-card rounded-xl shadow-sm overflow-hidden card-hover ${
+      className={`bg-white p-${isMain ? '6' : '5'} rounded-xl shadow-sm border ${isMain ? 'border-pharma-primary/20' : 'border-gray-200'} hover:shadow-md transition-all ${
         drug.isEgyptian ? "egyptian-card" : ""
       }`}
+      dir={language.direction}
     >
-      <div className="p-6">
-        <div className="flex justify-between items-start">
-          <h3 className="text-xl font-medium text-gray-900 flex items-center" dir="rtl">
-            {drug.name}
-            {drug.isEgyptian && (
-              <span className="mr-2 inline-flex items-center text-pharma-accent">
-                <Flag size={16} className="ml-1" />
-                <span className="text-xs">مصري</span>
-              </span>
-            )}
-          </h3>
-          
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <h4 className={`${isMain ? 'text-xl' : 'text-lg'} font-semibold text-pharma-primary`}>
+            {language.code === 'ar' ? drug.name : (drug.nameEn || drug.name)}
+          </h4>
+          <p className="text-gray-600 text-sm mt-1">
+            {translations.company}: {drug.company}
+          </p>
+        </div>
+        <div className="text-right">
+          <div className={`${isMain ? 'text-lg' : 'text-base'} font-bold text-pharma-accent`}>
+            {drug.price} {translations.egp}
+          </div>
           {savings > 0 && (
-            <span className="bg-pharma-save/10 text-pharma-save px-2 py-1 rounded-md text-sm font-medium">
-              وفر {savings}%
-            </span>
+            <div className="text-xs text-pharma-save font-medium mt-1">
+              {translations.save} {savings}% {translations.compareTo} {drug.alternatives[0]?.name}
+            </div>
           )}
         </div>
-
-        <div className="mt-2 text-sm text-gray-600" dir="rtl">
-          المادة الفعالة: {drug.activeIngredient}
+      </div>
+      
+      <div className="flex flex-wrap gap-4 mt-4">
+        <div className="flex items-center">
+          <div className="w-4 h-4 bg-pharma-primary/10 rounded-full flex items-center justify-center mr-2 rtl:ml-2 rtl:mr-0">
+            <ShieldCheck size={12} className="text-pharma-primary" />
+          </div>
+          <span className="text-sm">
+            {translations.origin}: {drug.isEgyptian ? translations.egyptian : drug.country}
+          </span>
         </div>
-        
-        <div className="mt-3 flex justify-between" dir="rtl">
-          <span className="text-sm text-gray-600">الشركة: {drug.company}</span>
-          <span className="text-sm text-gray-600">البلد: {drug.country}</span>
-        </div>
-        
-        <div className="mt-2 flex justify-between items-center" dir="rtl">
-          <span className="text-lg font-medium text-pharma-primary">{drug.price} جنيه</span>
-          <span className={`flex items-center text-sm ${drug.isAvailable ? "text-pharma-save" : "text-red-500"}`}>
-            {drug.isAvailable ? (
-              <>
-                <CheckCircle size={16} className="ml-1" />
-                <span>متوفر</span>
-              </>
-            ) : (
-              <>
-                <XCircle size={16} className="ml-1" />
-                <span>غير متوفر</span>
-              </>
-            )}
+        <div className="flex items-center">
+          <div className="w-4 h-4 bg-pharma-primary/10 rounded-full flex items-center justify-center mr-2 rtl:ml-2 rtl:mr-0">
+            <Stethoscope size={12} className="text-pharma-primary" />
+          </div>
+          <span className="text-sm">
+            {translations.activeIngredient}: {language.code === 'ar' 
+              ? drug.activeIngredient 
+              : (drug.activeIngredientEn || drug.activeIngredient)}
           </span>
         </div>
       </div>
       
-      {showAlternatives && drug.alternatives.length > 0 && (
-        <>
-          <Separator />
-          <div className="p-4 bg-pharma-secondary/50">
-            <h4 className="text-sm font-medium text-gray-700 mb-3" dir="rtl">البدائل المتاحة:</h4>
-            <div className="space-y-3">
-              {drug.alternatives.map((alt) => (
-                <div key={alt.id} className="rounded-lg p-3 bg-white" dir="rtl">
-                  <div className="flex justify-between items-center">
-                    <h5 className="font-medium text-gray-800 flex items-center">
-                      {alt.name}
-                      {alt.isEgyptian && (
-                        <span className="mr-1 inline-flex items-center text-pharma-accent">
-                          <Flag size={12} className="ml-1" />
-                          <span className="text-xs">مصري</span>
-                        </span>
-                      )}
-                    </h5>
-                    <span className="text-sm font-medium">
-                      {alt.price} جنيه
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-600 mt-1">
-                    المادة الفعالة: {alt.activeIngredient}
-                  </div>
-                  <div className="mt-1 flex justify-between text-xs text-gray-500">
-                    <span>الشركة: {alt.company}</span>
-                    <span>البلد: {alt.country}</span>
-                    <span className={alt.isAvailable ? "text-pharma-save" : "text-red-500"}>
-                      {alt.isAvailable ? "متوفر" : "غير متوفر"}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
+      <div className="mt-4 flex justify-between items-center">
+        <span 
+          className={`text-xs px-2 py-1 rounded-full ${
+            drug.isAvailable 
+              ? "bg-green-100 text-green-700" 
+              : "bg-red-100 text-red-700"
+          }`}
+        >
+          {drug.isAvailable ? translations.available : translations.unavailable}
+        </span>
+      </div>
     </div>
   );
 }

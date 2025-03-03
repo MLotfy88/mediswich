@@ -1,13 +1,23 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { FilterOptions, AppLanguage } from "@/types";
+import { LanguageContext } from "@/App";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
 interface FilterPanelProps {
   onFilterChange: (filters: FilterOptions) => void;
-  currentLanguage?: AppLanguage;
+  onClose?: () => void;
+  isVisible?: boolean;
 }
 
-export default function FilterPanel({ onFilterChange, currentLanguage = { code: 'ar', direction: 'rtl' } }: FilterPanelProps) {
+export default function FilterPanel({ 
+  onFilterChange, 
+  onClose,
+  isVisible = true 
+}: FilterPanelProps) {
+  const { language } = useContext(LanguageContext);
   const [country, setCountry] = useState<string | null>(null);
   const [minPrice, setMinPrice] = useState<string>("");
   const [maxPrice, setMaxPrice] = useState<string>("");
@@ -15,19 +25,20 @@ export default function FilterPanel({ onFilterChange, currentLanguage = { code: 
 
   // الترجمات حسب اللغة
   const translations = {
-    filters: currentLanguage.code === 'ar' ? "تصفية النتائج" : "Filter Results",
-    origin: currentLanguage.code === 'ar' ? "مصدر الدواء" : "Medication Origin",
-    all: currentLanguage.code === 'ar' ? "الكل" : "All",
-    egyptian: currentLanguage.code === 'ar' ? "مصري" : "Egyptian",
-    international: currentLanguage.code === 'ar' ? "عالمي" : "International",
-    priceRange: currentLanguage.code === 'ar' ? "نطاق السعر" : "Price Range",
-    minPrice: currentLanguage.code === 'ar' ? "السعر الأدنى" : "Min Price",
-    maxPrice: currentLanguage.code === 'ar' ? "السعر الأقصى" : "Max Price",
-    availability: currentLanguage.code === 'ar' ? "التوافر" : "Availability",
-    available: currentLanguage.code === 'ar' ? "متوفر" : "Available",
-    unavailable: currentLanguage.code === 'ar' ? "غير متوفر" : "Unavailable",
-    applyFilters: currentLanguage.code === 'ar' ? "تطبيق الفلاتر" : "Apply Filters",
-    resetFilters: currentLanguage.code === 'ar' ? "إعادة تعيين" : "Reset Filters"
+    filters: language.code === 'ar' ? "تصفية النتائج" : "Filter Results",
+    origin: language.code === 'ar' ? "مصدر الدواء" : "Medication Origin",
+    all: language.code === 'ar' ? "الكل" : "All",
+    egyptian: language.code === 'ar' ? "مصري" : "Egyptian",
+    international: language.code === 'ar' ? "عالمي" : "International",
+    priceRange: language.code === 'ar' ? "نطاق السعر" : "Price Range",
+    minPrice: language.code === 'ar' ? "السعر الأدنى" : "Min Price",
+    maxPrice: language.code === 'ar' ? "السعر الأقصى" : "Max Price",
+    availability: language.code === 'ar' ? "التوافر" : "Availability",
+    available: language.code === 'ar' ? "متوفر" : "Available",
+    unavailable: language.code === 'ar' ? "غير متوفر" : "Unavailable",
+    applyFilters: language.code === 'ar' ? "تطبيق الفلاتر" : "Apply Filters",
+    resetFilters: language.code === 'ar' ? "إعادة تعيين" : "Reset Filters",
+    close: language.code === 'ar' ? "إغلاق" : "Close"
   };
 
   // تحديث الفلاتر عند تغيير أي منها
@@ -67,11 +78,24 @@ export default function FilterPanel({ onFilterChange, currentLanguage = { code: 
     applyFilters();
   };
 
+  if (!isVisible) return null;
+
   return (
     <div 
-      className="bg-white p-6 rounded-xl shadow-sm border border-border" 
-      dir={currentLanguage.direction}
+      className="bg-white p-6 rounded-xl shadow-sm border border-border relative" 
+      dir={language.direction}
     >
+      {onClose && (
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="absolute top-2 right-2 rtl:left-2 rtl:right-auto" 
+          onClick={onClose}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      )}
+      
       <h3 className="text-lg font-semibold text-pharma-primary mb-6">
         {translations.filters}
       </h3>
@@ -124,7 +148,7 @@ export default function FilterPanel({ onFilterChange, currentLanguage = { code: 
           <form onSubmit={handlePriceFilter} className="space-y-3">
             <div>
               <label className="sr-only">{translations.minPrice}</label>
-              <input
+              <Input
                 type="number"
                 value={minPrice}
                 onChange={(e) => setMinPrice(e.target.value)}
@@ -135,7 +159,7 @@ export default function FilterPanel({ onFilterChange, currentLanguage = { code: 
             </div>
             <div>
               <label className="sr-only">{translations.maxPrice}</label>
-              <input
+              <Input
                 type="number"
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(e.target.value)}
@@ -144,12 +168,12 @@ export default function FilterPanel({ onFilterChange, currentLanguage = { code: 
                 min="0"
               />
             </div>
-            <button
+            <Button
               type="submit"
               className="w-full text-sm bg-pharma-primary/10 text-pharma-primary py-2 px-3 rounded-md hover:bg-pharma-primary/20 transition-colors"
             >
               {translations.applyFilters}
-            </button>
+            </Button>
           </form>
         </div>
         
@@ -194,12 +218,12 @@ export default function FilterPanel({ onFilterChange, currentLanguage = { code: 
         
         {/* زر إعادة التعيين */}
         <div className="pt-2">
-          <button
+          <Button
             onClick={resetFilters}
             className="w-full text-sm bg-gray-100 text-gray-700 py-2 px-3 rounded-md hover:bg-gray-200 transition-colors"
           >
             {translations.resetFilters}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -1,3 +1,4 @@
+
 import { Drug } from "@/types";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -8,6 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
  * اسم المنتج,Product Name,المادة الفعالة,Active Ingredient,نوع الدواء,بلد المنشأ,الشركة المصنعة,السعر (EGP)
  */
 export const convertCSVToDrugs = (csvData: string): Drug[] => {
+  console.log("Processing CSV data:", csvData.substring(0, 100) + "...");
   const lines = csvData.trim().split("\n");
   
   // تحويل البيانات إلى كائنات أدوية
@@ -16,20 +18,26 @@ export const convertCSVToDrugs = (csvData: string): Drug[] => {
   for (let i = 1; i < lines.length; i++) {
     try {
       const values = lines[i].split(",");
-      if (values.length < 8) continue; // تخطي الصفوف التي لا تحتوي على البيانات الكاملة
+      if (values.length < 8) {
+        console.warn(`Skipping line ${i}: insufficient data (${values.length} columns)`, values);
+        continue; // تخطي الصفوف التي لا تحتوي على البيانات الكاملة
+      }
       
       // ترتيب البيانات حسب التنسيق الجديد
       const name = values[0].trim();
       const nameEn = values[1].trim();
       const activeIngredient = values[2].trim();
       const activeIngredientEn = values[3].trim();
-      const drugType = values[4].trim(); // نوع الدواء (نحفظه لمعلومات إضافية)
+      const drugType = values[4].trim(); // نوع الدواء
       const country = values[5].trim();
       const company = values[6].trim();
       const priceStr = values[7].trim().replace("EGP", "").replace(" ", "");
       const price = parseFloat(priceStr);
       
-      if (!name || isNaN(price)) continue; // تخطي الصفوف بدون اسم أو سعر صالح
+      if (!name || isNaN(price)) {
+        console.warn(`Skipping line ${i}: invalid name or price`, { name, price: priceStr });
+        continue; // تخطي الصفوف بدون اسم أو سعر صالح
+      }
       
       // إنشاء معرف فريد للدواء الجديد
       const id = uuidv4();
@@ -49,16 +57,19 @@ export const convertCSVToDrugs = (csvData: string): Drug[] => {
         isAvailable: true, // نفترض أنه متاح افتراضيًا
         activeIngredient,
         activeIngredientEn,
+        drugType,
         alternatives: [] // بدون بدائل في البداية
       };
       
       drugs.push(drug);
+      console.log(`Processed drug: ${name}, Price: ${price}`);
     } catch (error) {
       console.error(`خطأ في سطر ${i}:`, error);
       // استمر في المعالجة رغم الأخطاء في بعض السطور
     }
   }
   
+  console.log(`Processed ${drugs.length} drugs from CSV`);
   return drugs;
 };
 
@@ -98,15 +109,41 @@ export const convertJSONToDrugs = (jsonData: string): Drug[] => {
 
 /**
  * دمج الأدوية المستوردة مع قاعدة البيانات الحالية
+ * محدث ليقوم بتحديث الأدوية الموجودة وإضافة الجديدة
  */
 export const mergeDrugsWithExisting = (importedDrugs: Drug[], existingDrugs: Drug[]): Drug[] => {
-  const existingIds = new Set(existingDrugs.map(drug => drug.id));
   const mergedDrugs = [...existingDrugs];
+  const existingDrugMap = new Map<string, number>();
   
-  // إضافة الأدوية الجديدة فقط (التي ليس لها معرف موجود بالفعل)
-  importedDrugs.forEach(drug => {
-    if (!existingIds.has(drug.id)) {
-      mergedDrugs.push(drug);
+  // إنشاء خريطة للأدوية الموجودة
+  existingDrugs.forEach((drug, index) => {
+    existingDrugMap.set(drug.name.toLowerCase(), index);
+    // إضافة البحث بالاسم الإنجليزي أيضًا إذا كان موجودًا
+    if (drug.nameEn) {
+      existingDrugMap.set(drug.nameEn.toLowerCase(), index);
+    }
+  });
+  
+  // تحديث الأدوية الموجودة وإضافة الجديدة
+  importedDrugs.forEach(newDrug => {
+    // البحث عن الدواء في القاعدة الحالية
+    const existingIndexByName = existingDrugMap.get(newDrug.name.toLowerCase());
+    const existingIndexByNameEn = newDrug.nameEn ? existingDrugMap.get(newDrug.nameEn.toLowerCase()) : undefined;
+    const existingIndex = existingIndexByName !== undefined ? existingIndexByName : existingIndexByNameEn;
+    
+    if (existingIndex !== undefined) {
+      // تحديث الدواء الموجود مع الاحتفاظ بالبدائل
+      const existingAlternatives = mergedDrugs[existingIndex].alternatives;
+      mergedDrugs[existingIndex] = {
+        ...newDrug,
+        id: mergedDrugs[existingIndex].id, // الاحتفاظ بالمعرف الأصلي
+        alternatives: existingAlternatives // الاحتفاظ بالبدائل
+      };
+      console.log(`Updated existing drug: ${newDrug.name}`);
+    } else {
+      // إضافة دواء جديد
+      mergedDrugs.push(newDrug);
+      console.log(`Added new drug: ${newDrug.name}`);
     }
   });
   

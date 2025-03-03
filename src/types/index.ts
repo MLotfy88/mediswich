@@ -10,6 +10,7 @@ export interface Alternative {
   isAvailable: boolean;
   activeIngredient: string;
   activeIngredientEn?: string;
+  drugType?: string;
 }
 
 export interface Drug {
@@ -23,6 +24,7 @@ export interface Drug {
   isAvailable: boolean;
   activeIngredient: string;
   activeIngredientEn?: string;
+  drugType?: string;
   alternatives: Alternative[];
 }
 

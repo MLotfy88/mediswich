@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { importDrugsFromCSV } from "@/data/drugs/importedDrugs";
 import { useToast } from "@/hooks/use-toast";
+import { UploadCloud, FileText } from "lucide-react";
 
 export default function ImportDrugsForm() {
   const [isLoading, setIsLoading] = useState(false);
@@ -32,6 +33,7 @@ export default function ImportDrugsForm() {
     try {
       // قراءة محتوى الملف
       const content = await selectedFile.text();
+      console.log("Imported CSV content (first 100 chars):", content.substring(0, 100) + "...");
       
       // استدعاء وظيفة الاستيراد
       const importedDrugs = importDrugsFromCSV(content);
@@ -72,7 +74,7 @@ export default function ImportDrugsForm() {
         </p>
         
         <div className="flex flex-col space-y-3">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 rtl:space-x-reverse">
             <input
               type="file"
               id="csvFile"
@@ -83,16 +85,18 @@ export default function ImportDrugsForm() {
             />
             <label
               htmlFor="csvFile"
-              className={`py-2 px-4 rounded-md text-white font-medium cursor-pointer bg-pharma-primary hover:bg-pharma-primary/90 transition-colors
+              className={`flex items-center py-2 px-4 rounded-md text-white font-medium cursor-pointer bg-pharma-primary hover:bg-pharma-primary/90 transition-colors
                 ${isLoading ? "opacity-70 cursor-not-allowed" : ""}`}
             >
+              <FileText className="ml-2 rtl:mr-2 rtl:ml-0" size={18} />
               اختر ملف CSV
             </label>
           </div>
           
           {/* عرض اسم الملف المحدد */}
           {selectedFile && (
-            <div className="text-sm text-gray-700 bg-gray-100 p-2 rounded-md">
+            <div className="text-sm text-gray-700 bg-gray-100 p-2 rounded-md flex items-center">
+              <FileText className="ml-2 text-gray-500" size={16} />
               الملف المحدد: {selectedFile.name}
             </div>
           )}
@@ -101,9 +105,10 @@ export default function ImportDrugsForm() {
           <Button
             onClick={handleImport}
             disabled={!selectedFile || isLoading}
-            className="bg-pharma-primary hover:bg-pharma-primary/90 w-full"
+            className="bg-pharma-primary hover:bg-pharma-primary/90 w-full flex items-center justify-center"
           >
-            {isLoading ? "جاري الاستيراد..." : "تحميل ورفع الملف"}
+            <UploadCloud className="ml-2 rtl:mr-2 rtl:ml-0" size={18} />
+            {isLoading ? "جاري الاستيراد..." : "رفع الملف وتحديث البيانات"}
           </Button>
         </div>
       </div>

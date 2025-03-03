@@ -9,6 +9,9 @@ import { searchDrugs } from "@/services/drugService";
 import { Drug, FilterOptions } from "@/types";
 import DrugCard from "@/components/DrugCard";
 import { useToast } from "@/hooks/use-toast";
+import { X, Filter } from "lucide-react";
+import { Button } from "./ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 
 interface SearchSectionProps {
   showResults: boolean;
@@ -37,6 +40,7 @@ export default function SearchSection({
     },
     availability: null
   });
+  const [showFilter, setShowFilter] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -84,6 +88,10 @@ export default function SearchSection({
     setFilterOptions(newFilters);
   };
 
+  const toggleFilter = () => {
+    setShowFilter(!showFilter);
+  };
+
   // ترجمات حسب اللغة الحالية
   const translations = {
     searchPlaceholder: language.code === 'ar' ? 'ابحث عن اسم الدواء أو المادة الفعالة...' : 'Search by medication name or active ingredient...',
@@ -99,12 +107,13 @@ export default function SearchSection({
           <SearchBar 
             onSearch={handleSearch} 
             placeholder={translations.searchPlaceholder}
+            onFilterToggle={toggleFilter}
           />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* مرشحات البحث */}
-          <div className="lg:col-span-1">
+          {/* مرشحات البحث للأجهزة الكبيرة */}
+          <div className="lg:col-span-1 hidden lg:block">
             <h2 
               className="text-lg font-semibold mb-4 text-pharma-primary"
               dir={language.direction}
@@ -124,6 +133,28 @@ export default function SearchSection({
               <ImportDrugsForm />
             </div>
           </div>
+
+          {/* مرشحات البحث للأجهزة الصغيرة (عبر شيت جانبي) */}
+          <Sheet open={showFilter} onOpenChange={setShowFilter}>
+            <SheetContent side={language.direction === 'rtl' ? 'right' : 'left'} className="w-[90%] sm:w-[350px] overflow-y-auto">
+              <div className="pt-8 h-full overflow-y-auto">
+                <FilterPanel 
+                  onFilterChange={handleFilterChange} 
+                  onClose={() => setShowFilter(false)}
+                />
+                
+                <div className="mt-6">
+                  <h2 
+                    className="text-lg font-semibold mb-4 text-pharma-primary"
+                    dir={language.direction}
+                  >
+                    {translations.importData}
+                  </h2>
+                  <ImportDrugsForm />
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
 
           {/* نتائج البحث */}
           <div className="lg:col-span-3">

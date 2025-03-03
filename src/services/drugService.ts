@@ -1,3 +1,4 @@
+
 import { Drug, FilterOptions, AppLanguage } from "@/types";
 import { antibiotics } from "@/data/drugs/antibiotics";
 import { painRelievers } from "@/data/drugs/painRelievers";
@@ -12,31 +13,38 @@ import { specialMedications } from "@/data/drugs/specialMedications";
 import { webTebMedications } from "@/data/drugs/webTebMedications";
 import { altibbiMedications } from "@/data/drugs/altibbiMedications";
 import { edaMedications } from "@/data/drugs/edaMedications";
-import { importedDrugs } from "@/data/drugs/importedDrugs";
+import { importedDrugs, setAlternativesForDrugs } from "@/data/drugs/importedDrugs";
 
-// مجموعة شاملة من الأدوية من كافة الفئات
-const allDrugs: Drug[] = [
-  ...antibiotics,
-  ...painRelievers,
-  ...cholesterolLowering,
-  ...cardiovascular,
-  ...psychotropics,
-  ...hormones,
-  ...gastrointestinal,
-  ...antiallergic,
-  ...antidiabetic,
-  ...specialMedications,
-  ...webTebMedications, 
-  ...altibbiMedications,
-  ...edaMedications,
-  ...importedDrugs
-];
+// الحصول على جميع الأدوية من كافة المصادر
+export const getAllDrugs = (): Drug[] => {
+  // تحديث البدائل للأدوية المستوردة
+  setAlternativesForDrugs();
+  
+  // مجموعة شاملة من الأدوية من كافة الفئات
+  return [
+    ...antibiotics,
+    ...painRelievers,
+    ...cholesterolLowering,
+    ...cardiovascular,
+    ...psychotropics,
+    ...hormones,
+    ...gastrointestinal,
+    ...antiallergic,
+    ...antidiabetic,
+    ...specialMedications,
+    ...webTebMedications, 
+    ...altibbiMedications,
+    ...edaMedications,
+    ...importedDrugs
+  ];
+};
 
-// البحث عن البدائل في البيانات
+// البحث عن الأدوية والبدائل في البيانات
 export const searchDrugs = (query: string, lang: string = 'ar'): Drug[] => {
   if (!query || query.length < 2) return [];
 
-  const normalizedQuery = query.toLowerCase();
+  const normalizedQuery = query.toLowerCase().trim();
+  const allDrugs = getAllDrugs();
   
   // البحث في الأسماء الإنجليزية إذا كانت اللغة إنجليزية، وإلا البحث في الأسماء العربية
   const searchResults = allDrugs.filter(drug => {
@@ -52,6 +60,37 @@ export const searchDrugs = (query: string, lang: string = 'ar'): Drug[] => {
   });
 
   return searchResults;
+};
+
+// البحث عن بدائل محددة لدواء معين
+export const findAlternativesForDrug = (drugId: string): Drug[] => {
+  const allDrugs = getAllDrugs();
+  const drug = allDrugs.find(d => d.id === drugId);
+  
+  if (!drug) return [];
+  
+  // البحث عن الأدوية التي تحتوي على نفس المادة الفعالة
+  return allDrugs.filter(d => 
+    d.id !== drug.id && 
+    d.activeIngredient.toLowerCase() === drug.activeIngredient.toLowerCase()
+  );
+};
+
+// الحصول على بدائل محددة لدواء معين
+export const getAlternativesForDrug = (drugName: string): Drug[] => {
+  const allDrugs = getAllDrugs();
+  const drug = allDrugs.find(d => 
+    d.name.toLowerCase() === drugName.toLowerCase() || 
+    (d.nameEn && d.nameEn.toLowerCase() === drugName.toLowerCase())
+  );
+  
+  if (!drug) return [];
+  
+  // البحث عن الأدوية التي تحتوي على نفس المادة الفعالة
+  return allDrugs.filter(d => 
+    d.id !== drug.id && 
+    d.activeIngredient.toLowerCase() === drug.activeIngredient.toLowerCase()
+  );
 };
 
 // حساب نسبة التوفير بالمقارنة مع السعر الأعلى
@@ -117,9 +156,10 @@ export const getDrugSuggestions = (
 ): Array<{ id: string; name: string; nameInOtherLanguage?: string }> => {
   if (!query || query.length < 2) return [];
 
-  const normalizedQuery = query.toLowerCase();
+  const normalizedQuery = query.toLowerCase().trim();
   const results: Array<{ id: string; name: string; nameInOtherLanguage?: string }> = [];
   const foundDrugs = new Set<string>(); // لتجنب التكرار
+  const allDrugs = getAllDrugs();
 
   allDrugs.forEach(drug => {
     const nameToSearch = language === 'ar' ? drug.name : (drug.nameEn || drug.name);
@@ -133,6 +173,30 @@ export const getDrugSuggestions = (
         nameInOtherLanguage: nameInOtherLanguage !== nameToSearch ? nameInOtherLanguage : undefined
       });
     }
+  });
+
+  return results.slice(0, 7); // إرجاع حد أقصى 7 اقتراحات
+};
+
+// الحصول على اقتراحات للأدوية البديلة
+export const getAlternativeDrugSuggestions = (
+  drugName: string,
+  language: string = 'ar'
+): Array<{ id: string; name: string; nameInOtherLanguage?: string }> => {
+  if (!drugName || drugName.length < 2) return [];
+
+  const alternatives = getAlternativesForDrug(drugName);
+  const results: Array<{ id: string; name: string; nameInOtherLanguage?: string }> = [];
+  
+  alternatives.forEach(drug => {
+    const nameToShow = language === 'ar' ? drug.name : (drug.nameEn || drug.name);
+    const nameInOtherLanguage = language === 'ar' ? (drug.nameEn || drug.name) : drug.name;
+    
+    results.push({
+      id: drug.id,
+      name: nameToShow,
+      nameInOtherLanguage: nameInOtherLanguage !== nameToShow ? nameInOtherLanguage : undefined
+    });
   });
 
   return results.slice(0, 7); // إرجاع حد أقصى 7 اقتراحات

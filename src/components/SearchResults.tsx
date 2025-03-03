@@ -5,6 +5,7 @@ import { filterDrugs, calculateSavings } from "@/services/drugService";
 import { Pill, ShieldCheck, Stethoscope } from "lucide-react";
 import NoResults from "./NoResults";
 import { LanguageContext } from "@/App";
+import DrugCard from "./DrugCard";
 
 interface SearchResultsProps {
   results: Drug[];
@@ -45,9 +46,10 @@ export default function SearchResults({
     company: language.code === 'ar' ? "الشركة" : "Company"
   };
 
-  // فلترة النتائج وفقًا للمرشحات المحددة
+  // معالجة النتائج وتحديد الأدوية الرئيسية والبدائل
   useEffect(() => {
-    const applyFilters = () => {
+    const processResults = () => {
+      // فلترة النتائج وفقًا للمرشحات المحددة
       const filtered = filterDrugs(
         results, 
         filterOptions.country, 
@@ -59,15 +61,43 @@ export default function SearchResults({
       
       // تحديد الدواء الرئيسي والبدائل
       if (filtered.length > 0) {
-        setMainDrug(filtered[0]);
-        setAlternatives(filtered.slice(1));
+        const main = filtered[0];
+        setMainDrug(main);
+        
+        // جمع البدائل من الأدوية المصفاة وإضافة البدائل من الدواء الرئيسي
+        const altDrugs: Drug[] = [];
+        
+        // إضافة البدائل من الدواء الرئيسي إذا كانت متوفرة
+        if (main.alternatives && main.alternatives.length > 0) {
+          main.alternatives.forEach(alt => {
+            // تحويل البديل إلى كائن دواء كامل للعرض
+            const fullAlt: Drug = {
+              ...alt,
+              alternatives: [] // تفريغ البدائل لتجنب التكرار
+            };
+            
+            // فحص ما إذا كان البديل موجود في النتائج المصفاة
+            const isDuplicate = filtered.slice(1).some(drug => drug.id === alt.id);
+            
+            if (!isDuplicate) {
+              altDrugs.push(fullAlt);
+            }
+          });
+        }
+        
+        // إضافة باقي الأدوية من النتائج المصفاة
+        filtered.slice(1).forEach(drug => {
+          altDrugs.push(drug);
+        });
+        
+        setAlternatives(altDrugs);
       } else {
         setMainDrug(null);
         setAlternatives([]);
       }
     };
     
-    applyFilters();
+    processResults();
   }, [results, filterOptions]);
 
   if (!isVisible) return null;
@@ -95,70 +125,11 @@ export default function SearchResults({
             className="text-lg font-bold text-pharma-primary mb-4 flex items-center"
             dir={language.direction}
           >
-            <Pill className="mr-2" size={18} />
+            <Pill className={language.direction === 'rtl' ? 'ml-2' : 'mr-2'} size={18} />
             {translations.mainDrug}
           </h3>
           
-          <div 
-            className={`bg-white p-6 rounded-xl shadow-sm border border-pharma-primary/20 hover:shadow-md transition-all ${
-              mainDrug.isEgyptian ? "egyptian-card" : ""
-            }`}
-            dir={language.direction}
-          >
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h4 className="text-xl font-semibold text-pharma-primary">
-                  {language.code === 'ar' ? mainDrug.name : (mainDrug.nameEn || mainDrug.name)}
-                </h4>
-                <p className="text-gray-600 text-sm mt-1">
-                  {translations.company}: {mainDrug.company}
-                </p>
-              </div>
-              <div className="text-right">
-                <div className="text-lg font-bold text-pharma-accent">
-                  {mainDrug.price} {translations.egp}
-                </div>
-                {calculateSavings(mainDrug) > 0 && (
-                  <div className="text-xs text-pharma-save font-medium mt-1">
-                    {translations.save} {calculateSavings(mainDrug)}% {translations.compareTo} {mainDrug.alternatives[0].name}
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            <div className="flex flex-wrap gap-4 mt-4">
-              <div className="flex items-center">
-                <div className="w-4 h-4 bg-pharma-primary/10 rounded-full flex items-center justify-center mr-2">
-                  <ShieldCheck size={12} className="text-pharma-primary" />
-                </div>
-                <span className="text-sm">
-                  {translations.origin}: {mainDrug.isEgyptian ? translations.egyptian : mainDrug.country}
-                </span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-4 h-4 bg-pharma-primary/10 rounded-full flex items-center justify-center mr-2">
-                  <Stethoscope size={12} className="text-pharma-primary" />
-                </div>
-                <span className="text-sm">
-                  {translations.activeIngredient}: {language.code === 'ar' 
-                    ? mainDrug.activeIngredient 
-                    : (mainDrug.activeIngredientEn || mainDrug.activeIngredient)}
-                </span>
-              </div>
-            </div>
-            
-            <div className="mt-4 flex justify-between items-center">
-              <span 
-                className={`text-xs px-2 py-1 rounded-full ${
-                  mainDrug.isAvailable 
-                    ? "bg-green-100 text-green-700" 
-                    : "bg-red-100 text-red-700"
-                }`}
-              >
-                {mainDrug.isAvailable ? translations.available : translations.unavailable}
-              </span>
-            </div>
-          </div>
+          <DrugCard drug={mainDrug} isMain={true} />
         </div>
       )}
       
@@ -169,58 +140,13 @@ export default function SearchResults({
             className="text-lg font-bold text-pharma-accent mb-4 flex items-center"
             dir={language.direction}
           >
-            <Pill className="mr-2" size={18} />
+            <Pill className={language.direction === 'rtl' ? 'ml-2' : 'mr-2'} size={18} />
             {translations.alternatives}
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {alternatives.map((drug) => (
-              <div 
-                key={drug.id}
-                className={`bg-white p-5 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all ${
-                  drug.isEgyptian ? "egyptian-card" : ""
-                }`}
-                dir={language.direction}
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <h4 className="text-lg font-semibold text-pharma-primary">
-                      {language.code === 'ar' ? drug.name : (drug.nameEn || drug.name)}
-                    </h4>
-                    <p className="text-gray-600 text-sm mt-1">
-                      {translations.company}: {drug.company}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-pharma-accent">
-                      {drug.price} {translations.egp}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex flex-wrap gap-3 mt-3">
-                  <div className="flex items-center">
-                    <div className="w-3.5 h-3.5 bg-pharma-secondary rounded-full flex items-center justify-center mr-1.5">
-                      <ShieldCheck size={10} className="text-pharma-primary" />
-                    </div>
-                    <span className="text-xs">
-                      {translations.origin}: {drug.isEgyptian ? translations.egyptian : drug.country}
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="mt-3 flex justify-between items-center">
-                  <span 
-                    className={`text-xs px-2 py-0.5 rounded-full ${
-                      drug.isAvailable 
-                        ? "bg-green-100 text-green-700" 
-                        : "bg-red-100 text-red-700"
-                    }`}
-                  >
-                    {drug.isAvailable ? translations.available : translations.unavailable}
-                  </span>
-                </div>
-              </div>
+              <DrugCard key={drug.id} drug={drug} />
             ))}
           </div>
         </div>
