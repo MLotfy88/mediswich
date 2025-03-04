@@ -67,6 +67,11 @@ const SearchSection: React.FC<SearchSectionProps> = ({
     }
   };
 
+  // This function is needed to match the updated FilterPanel component interface
+  const handleFilterApply = (filteredResults: Drug[]) => {
+    setSearchResults(filteredResults);
+  };
+
   return (
     <section className="py-8 bg-white">
       <div className="container mx-auto px-4">
@@ -94,10 +99,8 @@ const SearchSection: React.FC<SearchSectionProps> = ({
               
               {isFilterOpen && (
                 <FilterPanel 
-                  onFilterApply={(filteredResults) => {
-                    setSearchResults(filteredResults);
-                  }}
                   drugs={searchResults}
+                  onFilterChange={handleFilterApply}
                 />
               )}
             </div>

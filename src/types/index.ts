@@ -72,6 +72,7 @@ export interface DrugSuggestion {
   id: string;
   name: string;
   nameEn?: string;
+  nameInOtherLanguage?: string;
   activeIngredient: string;
   activeIngredientEn?: string;
 }

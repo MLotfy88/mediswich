@@ -21,7 +21,7 @@ export const searchDrugs = (searchTerm: string): Drug[] => {
 };
 
 // Function to get drug suggestions for autocomplete
-export const getDrugSuggestions = (searchTerm: string, languageCode: 'ar' | 'en'): Array<{ id: string; name: string; nameInOtherLanguage?: string }> => {
+export const getDrugSuggestions = (searchTerm: string, languageCode: 'ar' | 'en'): DrugSuggestion[] => {
   if (!searchTerm || searchTerm.trim().length < 2) return [];
   
   const lowerSearchTerm = searchTerm.toLowerCase();
@@ -38,6 +38,7 @@ export const getDrugSuggestions = (searchTerm: string, languageCode: 'ar' | 'en'
     .map(drug => ({
       id: drug.id,
       name: languageCode === 'ar' ? drug.name : (drug.nameEn || drug.name),
+      nameEn: drug.nameEn,
       nameInOtherLanguage: languageCode === 'ar' ? drug.nameEn : drug.name,
       activeIngredient: languageCode === 'ar' ? drug.activeIngredient : (drug.activeIngredientEn || drug.activeIngredient),
       activeIngredientEn: languageCode === 'ar' ? (drug.activeIngredientEn || '') : drug.activeIngredient
@@ -45,7 +46,7 @@ export const getDrugSuggestions = (searchTerm: string, languageCode: 'ar' | 'en'
 };
 
 // Function to get alternative drug suggestions for a specific drug
-export const getAlternativeSuggestions = (drugId: string, searchTerm: string, languageCode: 'ar' | 'en'): Array<{ id: string; name: string; nameInOtherLanguage?: string }> => {
+export const getAlternativeSuggestions = (drugId: string, searchTerm: string, languageCode: 'ar' | 'en'): DrugSuggestion[] => {
   if (!drugId || !searchTerm || searchTerm.trim().length < 2) return [];
   
   // Find the drug by ID
@@ -68,6 +69,7 @@ export const getAlternativeSuggestions = (drugId: string, searchTerm: string, la
     .map(alt => ({
       id: alt.id,
       name: languageCode === 'ar' ? alt.name : (alt.nameEn || alt.name),
+      nameEn: alt.nameEn,
       nameInOtherLanguage: languageCode === 'ar' ? alt.nameEn : alt.name,
       activeIngredient: languageCode === 'ar' ? alt.activeIngredient : (alt.activeIngredientEn || alt.activeIngredient),
       activeIngredientEn: languageCode === 'ar' ? (alt.activeIngredientEn || '') : alt.activeIngredient

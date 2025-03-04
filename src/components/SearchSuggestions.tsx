@@ -41,13 +41,35 @@ const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({
             searchTerm, 
             language.code
           );
-          setSuggestions(altSuggestions);
-          setIsVisible(altSuggestions.length > 0);
+          
+          // Make sure the suggestions match the DrugSuggestion interface
+          const formattedSuggestions: DrugSuggestion[] = altSuggestions.map(s => ({
+            id: s.id,
+            name: s.name,
+            nameEn: s.nameEn,
+            nameInOtherLanguage: s.nameInOtherLanguage,
+            activeIngredient: s.activeIngredient || '',
+            activeIngredientEn: s.activeIngredientEn || ''
+          }));
+          
+          setSuggestions(formattedSuggestions);
+          setIsVisible(formattedSuggestions.length > 0);
         } else {
           // Normal drug search
           const drugSuggestions = getDrugSuggestions(searchTerm, language.code);
-          setSuggestions(drugSuggestions);
-          setIsVisible(drugSuggestions.length > 0);
+          
+          // Make sure the suggestions match the DrugSuggestion interface
+          const formattedSuggestions: DrugSuggestion[] = drugSuggestions.map(s => ({
+            id: s.id,
+            name: s.name,
+            nameEn: s.nameEn,
+            nameInOtherLanguage: s.nameInOtherLanguage,
+            activeIngredient: s.activeIngredient || '',
+            activeIngredientEn: s.activeIngredientEn || ''
+          }));
+          
+          setSuggestions(formattedSuggestions);
+          setIsVisible(formattedSuggestions.length > 0);
         }
       } catch (error) {
         console.error("Error fetching suggestions:", error);
