@@ -1,3 +1,4 @@
+
 import { useState, useContext } from "react";
 import { LanguageContext } from "@/App";
 import { Drug, SearchQuery, FilterOptions } from "@/types";
@@ -106,8 +107,8 @@ const SearchSection: React.FC<SearchSectionProps> = ({
               
               {isFilterOpen && (
                 <FilterPanel 
-                  drugs={searchResults}
                   onFilterChange={handleFilterChange}
+                  drugs={searchResults}
                 />
               )}
             </div>

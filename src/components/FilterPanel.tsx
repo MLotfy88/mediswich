@@ -1,6 +1,5 @@
-
 import { useState, useEffect, useContext } from "react";
-import { FilterOptions, AppLanguage } from "@/types";
+import { FilterOptions, AppLanguage, Drug } from "@/types";
 import { LanguageContext } from "@/App";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,12 +9,14 @@ interface FilterPanelProps {
   onFilterChange: (filters: FilterOptions) => void;
   onClose?: () => void;
   isVisible?: boolean;
+  drugs?: Drug[];
 }
 
 export default function FilterPanel({ 
   onFilterChange, 
   onClose,
-  isVisible = true 
+  isVisible = true,
+  drugs
 }: FilterPanelProps) {
   const { language } = useContext(LanguageContext);
   const [country, setCountry] = useState<string | null>(null);
@@ -23,7 +24,6 @@ export default function FilterPanel({
   const [maxPrice, setMaxPrice] = useState<string>("");
   const [availability, setAvailability] = useState<string | null>(null);
 
-  // الترجمات حسب اللغة
   const translations = {
     filters: language.code === 'ar' ? "تصفية النتائج" : "Filter Results",
     origin: language.code === 'ar' ? "مصدر الدواء" : "Medication Origin",
@@ -41,7 +41,6 @@ export default function FilterPanel({
     close: language.code === 'ar' ? "إغلاق" : "Close"
   };
 
-  // تحديث الفلاتر عند تغيير أي منها
   useEffect(() => {
     applyFilters();
   }, [country, availability]);
