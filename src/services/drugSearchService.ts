@@ -7,25 +7,69 @@ export const searchDrugs = (searchTerm: string): Drug[] => {
   const lowerSearchTerm = searchTerm.toLowerCase();
   return drugsData.filter((drug) => {
     const lowerName = drug.name.toLowerCase();
+    const lowerNameEn = drug.nameEn ? drug.nameEn.toLowerCase() : '';
     const lowerActiveIngredient = drug.activeIngredient.toLowerCase();
+    const lowerActiveIngredientEn = drug.activeIngredientEn ? drug.activeIngredientEn.toLowerCase() : '';
+    
     return (
       lowerName.includes(lowerSearchTerm) ||
-      lowerActiveIngredient.includes(lowerSearchTerm)
+      lowerNameEn.includes(lowerSearchTerm) ||
+      lowerActiveIngredient.includes(lowerSearchTerm) ||
+      lowerActiveIngredientEn.includes(lowerSearchTerm)
     );
   });
 };
 
 // Function to get drug suggestions for autocomplete
 export const getDrugSuggestions = (searchTerm: string, languageCode: 'ar' | 'en'): Array<{ id: string; name: string; nameInOtherLanguage?: string }> => {
+  if (!searchTerm || searchTerm.trim().length < 2) return [];
+  
   const lowerSearchTerm = searchTerm.toLowerCase();
   return drugsData
     .filter(drug => {
-      const name = languageCode === 'ar' ? drug.name : (drug.nameEn || drug.name);
-      return name.toLowerCase().includes(lowerSearchTerm);
+      const nameInCurrentLang = languageCode === 'ar' ? drug.name : (drug.nameEn || drug.name);
+      const nameInOtherLang = languageCode === 'ar' ? (drug.nameEn || '') : drug.name;
+      const activeIngredientInCurrentLang = languageCode === 'ar' ? drug.activeIngredient : (drug.activeIngredientEn || drug.activeIngredient);
+      
+      return nameInCurrentLang.toLowerCase().includes(lowerSearchTerm) || 
+             nameInOtherLang.toLowerCase().includes(lowerSearchTerm) ||
+             activeIngredientInCurrentLang.toLowerCase().includes(lowerSearchTerm);
     })
     .map(drug => ({
       id: drug.id,
       name: languageCode === 'ar' ? drug.name : (drug.nameEn || drug.name),
-      nameInOtherLanguage: languageCode === 'ar' ? drug.nameEn : drug.name
+      nameInOtherLanguage: languageCode === 'ar' ? drug.nameEn : drug.name,
+      activeIngredient: languageCode === 'ar' ? drug.activeIngredient : (drug.activeIngredientEn || drug.activeIngredient),
+      activeIngredientEn: languageCode === 'ar' ? (drug.activeIngredientEn || '') : drug.activeIngredient
+    }));
+};
+
+// Function to get alternative drug suggestions for a specific drug
+export const getAlternativeSuggestions = (drugId: string, searchTerm: string, languageCode: 'ar' | 'en'): Array<{ id: string; name: string; nameInOtherLanguage?: string }> => {
+  if (!drugId || !searchTerm || searchTerm.trim().length < 2) return [];
+  
+  // Find the drug by ID
+  const drug = drugsData.find(d => d.id === drugId);
+  if (!drug || !drug.alternatives || drug.alternatives.length === 0) return [];
+  
+  const lowerSearchTerm = searchTerm.toLowerCase();
+  
+  // Filter and map alternatives
+  return drug.alternatives
+    .filter(alt => {
+      const nameInCurrentLang = languageCode === 'ar' ? alt.name : (alt.nameEn || alt.name);
+      const nameInOtherLang = languageCode === 'ar' ? (alt.nameEn || '') : alt.name;
+      const activeIngredientInCurrentLang = languageCode === 'ar' ? alt.activeIngredient : (alt.activeIngredientEn || alt.activeIngredient);
+      
+      return nameInCurrentLang.toLowerCase().includes(lowerSearchTerm) || 
+             nameInOtherLang.toLowerCase().includes(lowerSearchTerm) ||
+             activeIngredientInCurrentLang.toLowerCase().includes(lowerSearchTerm);
+    })
+    .map(alt => ({
+      id: alt.id,
+      name: languageCode === 'ar' ? alt.name : (alt.nameEn || alt.name),
+      nameInOtherLanguage: languageCode === 'ar' ? alt.nameEn : alt.name,
+      activeIngredient: languageCode === 'ar' ? alt.activeIngredient : (alt.activeIngredientEn || alt.activeIngredient),
+      activeIngredientEn: languageCode === 'ar' ? (alt.activeIngredientEn || '') : alt.activeIngredient
     }));
 };

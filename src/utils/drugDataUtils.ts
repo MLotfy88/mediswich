@@ -1,3 +1,4 @@
+
 import { Drug, Alternative } from '@/types';
 
 // Function to format and validate drug data from CSV
@@ -16,6 +17,7 @@ export function processDrugData(data: any[]): (Drug | Alternative)[] {
       activeIngredient: item.activeIngredient || item.active_ingredient || '',
       activeIngredientEn: item.activeIngredientEn || item.active_ingredient_en || '',
       drugType: item.drugType || item.drug_type || '',
+      manufacturer: item.manufacturer || item.company || '',
     };
 
     // If it's a drug with alternatives, process them
@@ -32,6 +34,7 @@ export function processDrugData(data: any[]): (Drug | Alternative)[] {
         activeIngredient: alt.activeIngredient || alt.active_ingredient || drug.activeIngredient,
         activeIngredientEn: alt.activeIngredientEn || alt.active_ingredient_en || drug.activeIngredientEn,
         drugType: alt.drugType || alt.drug_type || drug.drugType,
+        manufacturer: alt.manufacturer || alt.company || '',
       }));
     } else if (!('alternatives' in drug)) {
       (drug as Drug).alternatives = [];
@@ -65,6 +68,7 @@ export function mergeDrugData(existingDrugs: Drug[], newDrugs: (Drug | Alternati
           activeIngredient: newDrug.activeIngredient || result[index].activeIngredient,
           activeIngredientEn: newDrug.activeIngredientEn || result[index].activeIngredientEn,
           drugType: newDrug.drugType || result[index].drugType,
+          manufacturer: newDrug.manufacturer || result[index].manufacturer,
           // Merge alternatives
           alternatives: [...result[index].alternatives, ...newDrug.alternatives.filter(alt => 
             !result[index].alternatives.some(existingAlt => existingAlt.id === alt.id)

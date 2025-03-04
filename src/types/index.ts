@@ -11,6 +11,7 @@ export interface Alternative {
   activeIngredient: string;
   activeIngredientEn?: string;
   drugType?: string;
+  manufacturer?: string;
 }
 
 export interface Drug {
@@ -25,6 +26,7 @@ export interface Drug {
   activeIngredient: string;
   activeIngredientEn?: string;
   drugType?: string;
+  manufacturer?: string;
   alternatives: Alternative[];
 }
 

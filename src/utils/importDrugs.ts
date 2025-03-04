@@ -21,6 +21,8 @@ export const importDrugsFromCSV = (
           return;
         }
         
+        console.log("CSV import data:", results.data);
+        
         // Process the data to conform to our Drug/Alternative interface
         const processedData = processDrugData(results.data);
         
@@ -55,13 +57,16 @@ export const parseAlternativesFromCSV = (
     return {
       id: `alt-${mainDrugId}-${Math.random().toString(36).substring(2, 9)}`,
       name: fields[0] || '',
-      company: fields[1] || '',
-      price: parseFloat(fields[2]) || 0,
-      country: fields[3] || 'Egypt',
-      isEgyptian: fields[3] === 'Egypt',
+      nameEn: fields[1] || '',
+      company: fields[2] || '',
+      price: parseFloat(fields[3]) || 0,
+      country: fields[4] || 'Egypt',
+      isEgyptian: fields[4] === 'Egypt',
       isAvailable: true, // Default to true
-      activeIngredient: '', // Will be filled from main drug
-      activeIngredientEn: '', // Will be filled from main drug
+      activeIngredient: fields[5] || '', // Active ingredient
+      activeIngredientEn: fields[6] || '', // Active ingredient in English
+      drugType: fields[7] || '', // Drug type
+      manufacturer: fields[8] || '', // Manufacturer
     };
   });
 };

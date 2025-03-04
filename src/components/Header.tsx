@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import MediSwitchLogo from "./MediSwitchLogo";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { AppLanguage } from "@/types";
-import { Menu, X, Pill, Calculator, Info } from "lucide-react";
+import { Menu, X, Pill, Calculator, Info, GitCompare } from "lucide-react";
 import { LanguageContext } from "@/App";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "./ui/button";
@@ -41,8 +41,7 @@ const Header: React.FC<HeaderProps> = ({
         <div className="flex justify-between items-center py-3">
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
-              <Pill className="text-pharma-primary h-8 w-8 mr-2 rtl:ml-2 rtl:mr-0" />
-              <span className="text-lg font-semibold text-pharma-primary">MediSwitch</span>
+              <GitCompare className="text-pharma-primary h-8 w-8 mr-2 rtl:ml-2 rtl:mr-0" />
             </Link>
           </div>
           
@@ -80,7 +79,7 @@ const Header: React.FC<HeaderProps> = ({
                     className="flex items-center py-3 px-2 text-gray-700 hover:bg-pharma-secondary rounded-md transition-colors"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <Pill className={language.direction === 'rtl' ? 'ml-3' : 'mr-3'} size={20} />
+                    <GitCompare className={language.direction === 'rtl' ? 'ml-3' : 'mr-3'} size={20} />
                     {translations.home}
                   </Link>
                   

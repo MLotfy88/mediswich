@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Calculator } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { LanguageContext } from "@/App";
-import { getDrugSuggestions } from "@/services/drugService";
+import { getDrugSuggestions } from "@/services/drugSearchService";
 import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 
 export default function DosageCalculator() {
@@ -23,11 +23,12 @@ export default function DosageCalculator() {
   // للتعامل مع مقترحات الأدوية
   const [suggestions, setSuggestions] = useState<Array<{ id: string; name: string; nameInOtherLanguage?: string }>>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const commandRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (drugName.trim()) {
-      const fetchSuggestions = async () => {
+    if (drugName.trim().length >= 2) {
+      const fetchSuggestions = () => {
         // Convert drugName to string explicitly and pass language code
         const suggestionResults = getDrugSuggestions(drugName, language.code);
         setSuggestions(suggestionResults);
@@ -43,7 +44,8 @@ export default function DosageCalculator() {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (commandRef.current && !commandRef.current.contains(event.target as Node)) {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node) &&
+          inputRef.current && !inputRef.current.contains(event.target as Node)) {
         setShowSuggestions(false);
       }
     };
@@ -186,44 +188,44 @@ export default function DosageCalculator() {
         </div>
         
         {/* اسم الدواء */}
-        <div className="relative" ref={commandRef}>
+        <div className="relative">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             {translations.drugName}
           </label>
           <Input
+            ref={inputRef}
             type="text"
             value={drugName}
             onChange={(e) => setDrugName(e.target.value)}
             placeholder="Paracetamol"
             className="w-full"
-            onFocus={() => drugName.trim() && setShowSuggestions(true)}
+            onFocus={() => drugName.trim().length >= 2 && setShowSuggestions(true)}
           />
           
           {/* اقتراحات الأدوية */}
           {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-1 rounded-lg border shadow-md bg-white z-50 overflow-hidden">
-              <Command>
-                <CommandList className="max-h-64 overflow-auto">
-                  <CommandGroup>
-                    {suggestions.map((suggestion) => (
-                      <CommandItem
-                        key={suggestion.id}
-                        onSelect={() => handleSuggestionClick(suggestion.name)}
-                        className="px-4 py-2 hover:bg-pharma-secondary cursor-pointer focus:bg-pharma-secondary"
-                      >
-                        <div className="flex flex-col w-full" dir={language.direction}>
-                          <span className="font-medium">{suggestion.name}</span>
-                          {suggestion.nameInOtherLanguage && (
-                            <span className="text-xs text-gray-500">
-                              {suggestion.nameInOtherLanguage}
-                            </span>
-                          )}
-                        </div>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
+            <div 
+              ref={suggestionsRef}
+              className="absolute z-50 w-full mt-1 bg-white rounded-lg border shadow-md"
+            >
+              <ul className="py-1 max-h-64 overflow-auto">
+                {suggestions.map((suggestion) => (
+                  <li 
+                    key={suggestion.id}
+                    className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                    onClick={() => handleSuggestionClick(suggestion.name)}
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-medium">{suggestion.name}</span>
+                      {suggestion.nameInOtherLanguage && (
+                        <span className="text-xs text-gray-500">
+                          ({suggestion.nameInOtherLanguage})
+                        </span>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
         </div>

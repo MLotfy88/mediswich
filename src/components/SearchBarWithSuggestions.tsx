@@ -116,11 +116,12 @@ const SearchBarWithSuggestions: React.FC<SearchBarWithSuggestionsProps> = ({
         </div>
       </form>
       
-      {showSuggestions && (
+      {showSuggestions && searchQuery.term.trim().length >= 2 && (
         <SearchSuggestions
           searchTerm={searchQuery.term}
           onSuggestionClick={handleSuggestionClick}
           alternativesFor={alternativesFor}
+          position="bottom"
         />
       )}
     </div>

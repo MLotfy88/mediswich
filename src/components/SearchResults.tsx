@@ -1,7 +1,6 @@
 
 import { useEffect, useState, useContext } from "react";
 import { Drug, SearchQuery } from "@/types";
-import { filterDrugs } from "@/services/drugService";
 import { Pill } from "lucide-react";
 import NoResults from "./NoResults";
 import { LanguageContext } from "@/App";
@@ -35,45 +34,47 @@ export default function SearchResults({
   // معالجة النتائج وتحديد الأدوية الرئيسية والبدائل
   useEffect(() => {
     const processResults = () => {
+      if (results.length === 0) {
+        setFilteredResults([]);
+        setMainDrug(null);
+        setAlternatives([]);
+        return;
+      }
+      
       // Use results directly as they're already filtered by the searchDrugs function
       setFilteredResults(results);
       
       // تحديد الدواء الرئيسي والبدائل
-      if (results.length > 0) {
-        const main = results[0];
-        setMainDrug(main);
-        
-        // جمع البدائل من الأدوية المصفاة وإضافة البدائل من الدواء الرئيسي
-        const altDrugs: Drug[] = [];
-        
-        // إضافة البدائل من الدواء الرئيسي إذا كانت متوفرة
-        if (main.alternatives && main.alternatives.length > 0) {
-          main.alternatives.forEach(alt => {
-            // تحويل البديل إلى كائن دواء كامل للعرض
-            const fullAlt: Drug = {
-              ...alt,
-              alternatives: [] // تفريغ البدائل لتجنب التكرار
-            };
-            
-            // فحص ما إذا كان البديل موجود في النتائج المصفاة
-            const isDuplicate = results.slice(1).some(drug => drug.id === alt.id);
-            
-            if (!isDuplicate) {
-              altDrugs.push(fullAlt);
-            }
-          });
-        }
-        
-        // إضافة باقي الأدوية من النتائج المصفاة
-        results.slice(1).forEach(drug => {
-          altDrugs.push(drug);
+      const main = results[0];
+      setMainDrug(main);
+      
+      // جمع البدائل من الأدوية المصفاة
+      const altDrugs: Drug[] = [];
+      
+      // إضافة البدائل من الدواء الرئيسي إذا كانت متوفرة
+      if (main.alternatives && main.alternatives.length > 0) {
+        main.alternatives.forEach(alt => {
+          // تحويل البديل إلى كائن دواء كامل للعرض
+          const fullAlt: Drug = {
+            ...alt,
+            alternatives: [] // تفريغ البدائل لتجنب التكرار
+          };
+          
+          // فحص ما إذا كان البديل موجود في النتائج المصفاة
+          const isDuplicate = results.slice(1).some(drug => drug.id === alt.id);
+          
+          if (!isDuplicate) {
+            altDrugs.push(fullAlt);
+          }
         });
-        
-        setAlternatives(altDrugs);
-      } else {
-        setMainDrug(null);
-        setAlternatives([]);
       }
+      
+      // إضافة باقي الأدوية من النتائج المصفاة
+      results.slice(1).forEach(drug => {
+        altDrugs.push(drug);
+      });
+      
+      setAlternatives(altDrugs);
     };
     
     processResults();

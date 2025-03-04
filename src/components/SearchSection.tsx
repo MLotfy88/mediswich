@@ -8,6 +8,7 @@ import ImportDrugsForm from "./ImportDrugsForm";
 import { Filter } from "lucide-react";
 import { Button } from "./ui/button";
 import SearchBarWithSuggestions from "./SearchBarWithSuggestions";
+import FilterPanel from "./FilterPanel";
 
 interface SearchSectionProps {
   showResults: boolean;
@@ -45,7 +46,7 @@ const SearchSection: React.FC<SearchSectionProps> = ({
     setIsLoading(true);
     try {
       // Now correctly passes the SearchQuery.term value
-      const results = await searchDrugs(query.term);
+      const results = searchDrugs(query.term);
       setSearchResults(results);
       setShowResults(true);
     } catch (error) {
@@ -90,6 +91,15 @@ const SearchSection: React.FC<SearchSectionProps> = ({
                   <Filter size={20} />
                 </Button>
               </div>
+              
+              {isFilterOpen && (
+                <FilterPanel 
+                  onFilterApply={(filteredResults) => {
+                    setSearchResults(filteredResults);
+                  }}
+                  drugs={searchResults}
+                />
+              )}
             </div>
             
             {isLoading ? (
@@ -108,6 +118,9 @@ const SearchSection: React.FC<SearchSectionProps> = ({
             {/* Import Drug Data Form */}
             {!showResults && (
               <div className="mt-8 pt-4 border-t border-gray-200">
+                <h3 className="text-lg font-semibold mb-4" dir={language.direction}>
+                  {translations.importData}
+                </h3>
                 <ImportDrugsForm onImportSuccess={handleDrugDataImport} />
               </div>
             )}

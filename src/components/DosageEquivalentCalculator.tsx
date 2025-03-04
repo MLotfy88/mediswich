@@ -1,19 +1,19 @@
-
 import { useState, useEffect, useRef, useContext } from "react";
-import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getDrugSuggestions } from "@/services/drugService";
+import { getDrugSuggestions, getAlternativeSuggestions } from "@/services/drugSearchService";
 import { useToast } from "@/hooks/use-toast";
 import { LanguageContext } from "@/App";
 
 type EquivalentRecord = {
   id: string;
+  drugId1: string;
   drugName1: string;
   dose1: number;
+  drugId2: string;
   drugName2: string;
   dose2: number;
   date: Date;
@@ -21,6 +21,8 @@ type EquivalentRecord = {
 
 const DosageEquivalentCalculator = () => {
   const { language } = useContext(LanguageContext);
+  const [drugId1, setDrugId1] = useState("");
+  const [drugId2, setDrugId2] = useState("");
   const [drugName1, setDrugName1] = useState("");
   const [drugName2, setDrugName2] = useState("");
   const [dose1, setDose1] = useState<number | "">("");
@@ -29,7 +31,9 @@ const DosageEquivalentCalculator = () => {
   const [suggestions, setSuggestions] = useState<Array<{ id: string; name: string; nameInOtherLanguage?: string }>>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [calculationHistory, setCalculationHistory] = useState<EquivalentRecord[]>([]);
-  const commandRef = useRef<HTMLDivElement>(null);
+  const inputRef1 = useRef<HTMLInputElement>(null);
+  const inputRef2 = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -50,24 +54,40 @@ const DosageEquivalentCalculator = () => {
 
   useEffect(() => {
     if (activeDrug) {
-      const currentDrug = activeDrug === "drug1" ? drugName1 : drugName2;
-      if (currentDrug.trim()) {
-        const fetchSuggestions = async () => {
-          // Convert currentDrug to string explicitly
-          const suggestionResults = getDrugSuggestions(currentDrug, language.code);
-          setSuggestions(suggestionResults);
-        };
+      if (activeDrug === "drug1") {
+        if (drugName1.trim().length < 2) {
+          setSuggestions([]);
+          return;
+        }
         
-        fetchSuggestions();
-      } else {
-        setSuggestions([]);
+        // Fetch general drug suggestions for drug1
+        const drugSuggestions = getDrugSuggestions(drugName1, language.code);
+        setSuggestions(drugSuggestions);
+        setShowSuggestions(drugSuggestions.length > 0);
+      } else if (activeDrug === "drug2") {
+        if (drugName2.trim().length < 2) {
+          setSuggestions([]);
+          return;
+        }
+        
+        // If we have a first drug selected, show its alternatives
+        if (drugId1) {
+          const altSuggestions = getAlternativeSuggestions(drugId1, drugName2, language.code);
+          setSuggestions(altSuggestions);
+          setShowSuggestions(altSuggestions.length > 0);
+        } else {
+          // Otherwise show general drug suggestions
+          const drugSuggestions = getDrugSuggestions(drugName2, language.code);
+          setSuggestions(drugSuggestions);
+          setShowSuggestions(drugSuggestions.length > 0);
+        }
       }
     }
-  }, [drugName1, drugName2, activeDrug, language.code]);
+  }, [drugName1, drugName2, drugId1, activeDrug, language.code]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (commandRef.current && !commandRef.current.contains(event.target as Node)) {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node)) {
         setShowSuggestions(false);
         setActiveDrug(null);
       }
@@ -115,8 +135,10 @@ const DosageEquivalentCalculator = () => {
     // Add to history
     const newRecord: EquivalentRecord = {
       id: Date.now().toString(),
+      drugId1,
       drugName1,
       dose1: dose1Num,
+      drugId2,
       drugName2,
       dose2: calculatedDose,
       date: new Date()
@@ -146,18 +168,20 @@ const DosageEquivalentCalculator = () => {
     
     setActiveDrug(drugField);
     
-    if (value.trim()) {
+    if (value.trim().length >= 2) {
       setShowSuggestions(true);
     } else {
       setShowSuggestions(false);
     }
   };
 
-  const handleSuggestionClick = (suggestion: string) => {
+  const handleSuggestionClick = (suggestion: { id: string; name: string }) => {
     if (activeDrug === "drug1") {
-      setDrugName1(suggestion);
+      setDrugName1(suggestion.name);
+      setDrugId1(suggestion.id);
     } else if (activeDrug === "drug2") {
-      setDrugName2(suggestion);
+      setDrugName2(suggestion.name);
+      setDrugId2(suggestion.id);
     }
     setShowSuggestions(false);
     setActiveDrug(null);
@@ -197,25 +221,52 @@ const DosageEquivalentCalculator = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div ref={commandRef} className="space-y-4">
-              <div className="space-y-2">
+            <div className="space-y-4">
+              <div className="space-y-2 relative">
                 <Label htmlFor="drugName1">
                   {language.code === 'ar' ? 'الدواء الأول' : 'First Medication'}
                 </Label>
                 <div className="relative">
                   <Input
                     id="drugName1"
+                    ref={inputRef1}
                     placeholder={language.code === 'ar' ? 'ادخل اسم الدواء الأول' : 'Enter first medication name'}
                     value={drugName1}
                     onChange={(e) => handleDrugNameChange(e, "drug1")}
                     onFocus={() => {
                       setActiveDrug("drug1");
-                      drugName1.trim() && setShowSuggestions(true);
+                      drugName1.trim().length >= 2 && setShowSuggestions(true);
                     }}
                     className="w-full"
                     dir={language.direction}
                   />
                 </div>
+                
+                {activeDrug === "drug1" && showSuggestions && suggestions.length > 0 && (
+                  <div 
+                    ref={suggestionsRef}
+                    className="absolute z-50 mt-1 w-full bg-white rounded-lg border shadow-md"
+                  >
+                    <ul className="py-1 max-h-64 overflow-auto">
+                      {suggestions.map((suggestion) => (
+                        <li 
+                          key={suggestion.id}
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                          onClick={() => handleSuggestionClick(suggestion)}
+                        >
+                          <div className="flex flex-col">
+                            <span className="font-medium">{suggestion.name}</span>
+                            {suggestion.nameInOtherLanguage && (
+                              <span className="text-xs text-gray-500">
+                                ({suggestion.nameInOtherLanguage})
+                              </span>
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -235,50 +286,52 @@ const DosageEquivalentCalculator = () => {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 relative">
                 <Label htmlFor="drugName2">
                   {language.code === 'ar' ? 'الدواء الثاني' : 'Second Medication'}
                 </Label>
                 <div className="relative">
                   <Input
                     id="drugName2"
+                    ref={inputRef2}
                     placeholder={language.code === 'ar' ? 'ادخل اسم الدواء الثاني' : 'Enter second medication name'}
                     value={drugName2}
                     onChange={(e) => handleDrugNameChange(e, "drug2")}
                     onFocus={() => {
                       setActiveDrug("drug2");
-                      drugName2.trim() && setShowSuggestions(true);
+                      drugName2.trim().length >= 2 && setShowSuggestions(true);
                     }}
                     className="w-full"
                     dir={language.direction}
                   />
                 </div>
-              </div>
-
-              {showSuggestions && suggestions.length > 0 && (
-                <Command className="absolute mt-1 rounded-lg border shadow-md bg-white z-50">
-                  <CommandList>
-                    <CommandGroup>
+                
+                {activeDrug === "drug2" && showSuggestions && suggestions.length > 0 && (
+                  <div 
+                    ref={suggestionsRef}
+                    className="absolute z-50 mt-1 w-full bg-white rounded-lg border shadow-md"
+                  >
+                    <ul className="py-1 max-h-64 overflow-auto">
                       {suggestions.map((suggestion) => (
-                        <CommandItem
+                        <li 
                           key={suggestion.id}
-                          onSelect={() => handleSuggestionClick(suggestion.name)}
-                          className="px-4 py-2 hover:bg-pharma-secondary cursor-pointer focus:bg-pharma-secondary"
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                          onClick={() => handleSuggestionClick(suggestion)}
                         >
-                          <div className="flex flex-col w-full" dir={language.direction}>
+                          <div className="flex flex-col">
                             <span className="font-medium">{suggestion.name}</span>
                             {suggestion.nameInOtherLanguage && (
                               <span className="text-xs text-gray-500">
-                                {suggestion.nameInOtherLanguage}
+                                ({suggestion.nameInOtherLanguage})
                               </span>
                             )}
                           </div>
-                        </CommandItem>
+                        </li>
                       ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              )}
+                    </ul>
+                  </div>
+                )}
+              </div>
 
               {dose2 !== null && (
                 <div className="p-4 bg-pharma-secondary/50 rounded-lg mt-4">

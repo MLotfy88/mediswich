@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useContext } from 'react';
 import { Drug, DrugSuggestion } from '@/types';
 import { LanguageContext } from '@/App';
-import { getAllDrugs } from '@/services/drugService';
+import { getDrugSuggestions, getAlternativeSuggestions } from '@/services/drugSearchService';
 
 interface SearchSuggestionsProps {
   searchTerm: string;
@@ -32,51 +32,23 @@ const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({
     }
 
     // Use an async function inside useEffect to properly handle the Promise
-    const fetchSuggestions = async () => {
+    const fetchSuggestions = () => {
       try {
-        const allDrugs = getAllDrugs();  // Now returns directly an array
-        let filteredSuggestions: DrugSuggestion[] = [];
-
+        // If we're searching for alternatives to a specific drug
         if (alternativesFor) {
-          // If we're searching for alternatives, find the drug and get its alternatives
-          const drug = allDrugs.find(d => d.id === alternativesFor);
-          if (drug && drug.alternatives) {
-            filteredSuggestions = drug.alternatives
-              .filter(alt => 
-                (alt.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                 (alt.nameEn && alt.nameEn.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                 alt.activeIngredient.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                 (alt.activeIngredientEn && alt.activeIngredientEn.toLowerCase().includes(searchTerm.toLowerCase())))
-              )
-              .map(alt => ({
-                id: alt.id,
-                name: alt.name,
-                nameEn: alt.nameEn,
-                activeIngredient: alt.activeIngredient,
-                activeIngredientEn: alt.activeIngredientEn
-              }));
-          }
+          const altSuggestions = getAlternativeSuggestions(
+            alternativesFor, 
+            searchTerm, 
+            language.code
+          );
+          setSuggestions(altSuggestions);
+          setIsVisible(altSuggestions.length > 0);
         } else {
           // Normal drug search
-          filteredSuggestions = allDrugs
-            .filter(drug => 
-              (drug.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-               (drug.nameEn && drug.nameEn.toLowerCase().includes(searchTerm.toLowerCase())) ||
-               drug.activeIngredient.toLowerCase().includes(searchTerm.toLowerCase()) ||
-               (drug.activeIngredientEn && drug.activeIngredientEn.toLowerCase().includes(searchTerm.toLowerCase())))
-            )
-            .map(drug => ({
-              id: drug.id,
-              name: drug.name,
-              nameEn: drug.nameEn,
-              activeIngredient: drug.activeIngredient,
-              activeIngredientEn: drug.activeIngredientEn
-            }));
+          const drugSuggestions = getDrugSuggestions(searchTerm, language.code);
+          setSuggestions(drugSuggestions);
+          setIsVisible(drugSuggestions.length > 0);
         }
-
-        // Limit to top 10 suggestions
-        setSuggestions(filteredSuggestions.slice(0, 10));
-        setIsVisible(filteredSuggestions.length > 0);
       } catch (error) {
         console.error("Error fetching suggestions:", error);
         setSuggestions([]);
@@ -84,9 +56,9 @@ const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({
       }
     };
 
-    // Call the async function
+    // Call the function
     fetchSuggestions();
-  }, [searchTerm, alternativesFor]);
+  }, [searchTerm, alternativesFor, language.code]);
 
   // Close suggestions when clicking outside
   useEffect(() => {
@@ -107,7 +79,7 @@ const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({
   return (
     <div 
       ref={suggestionsRef}
-      className={`absolute w-full bg-white shadow-lg rounded-md z-10 ${position === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'}`}
+      className={`absolute w-full bg-white shadow-lg rounded-md z-10 border border-gray-200 ${position === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'}`}
       style={{ maxHeight, overflowY: 'auto' }}
       dir={language.direction}
     >
@@ -124,11 +96,8 @@ const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({
             <div className="flex flex-col">
               <div className="font-medium">
                 {language.code === 'ar' ? suggestion.name : (suggestion.nameEn || suggestion.name)}
-                {suggestion.nameEn && language.code === 'ar' && (
-                  <span className="mx-1 text-sm text-gray-500">({suggestion.nameEn})</span>
-                )}
-                {suggestion.name && language.code === 'en' && !suggestion.nameEn && (
-                  <span className="mx-1 text-sm text-gray-500">({suggestion.name})</span>
+                {suggestion.nameInOtherLanguage && (
+                  <span className="mx-1 text-sm text-gray-500">({suggestion.nameInOtherLanguage})</span>
                 )}
               </div>
               <div className="text-sm text-gray-500">
