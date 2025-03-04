@@ -1,7 +1,6 @@
-
 import { useState, useContext } from "react";
 import { LanguageContext } from "@/App";
-import { Drug, SearchQuery } from "@/types";
+import { Drug, SearchQuery, FilterOptions } from "@/types";
 import SearchResults from "./SearchResults";
 import { getAllDrugs, searchDrugs } from "@/services/drugService";
 import ImportDrugsForm from "./ImportDrugsForm";
@@ -9,6 +8,7 @@ import { Filter } from "lucide-react";
 import { Button } from "./ui/button";
 import SearchBarWithSuggestions from "./SearchBarWithSuggestions";
 import FilterPanel from "./FilterPanel";
+import { filterDrugs } from "@/services/drugFilterService";
 
 interface SearchSectionProps {
   showResults: boolean;
@@ -45,7 +45,6 @@ const SearchSection: React.FC<SearchSectionProps> = ({
     
     setIsLoading(true);
     try {
-      // Now correctly passes the SearchQuery.term value
       const results = searchDrugs(query.term);
       setSearchResults(results);
       setShowResults(true);
@@ -61,15 +60,23 @@ const SearchSection: React.FC<SearchSectionProps> = ({
   };
 
   const handleDrugDataImport = (updatedDrugs: Drug[]) => {
-    // If we have a search term, refresh the search results
     if (searchQuery.term.trim()) {
       handleSearch(searchQuery);
     }
   };
 
-  // This function is needed to match the updated FilterPanel component interface
-  const handleFilterApply = (filteredResults: Drug[]) => {
-    setSearchResults(filteredResults);
+  const handleFilterChange = async (filters: FilterOptions) => {
+    try {
+      const filteredResults = await filterDrugs(
+        filters.country,
+        filters.priceRange,
+        filters.availability,
+        filters.drugType
+      );
+      setSearchResults(filteredResults);
+    } catch (error) {
+      console.error("Error filtering drugs:", error);
+    }
   };
 
   return (
@@ -100,7 +107,7 @@ const SearchSection: React.FC<SearchSectionProps> = ({
               {isFilterOpen && (
                 <FilterPanel 
                   drugs={searchResults}
-                  onFilterChange={handleFilterApply}
+                  onFilterChange={handleFilterChange}
                 />
               )}
             </div>
@@ -118,7 +125,6 @@ const SearchSection: React.FC<SearchSectionProps> = ({
               )
             )}
             
-            {/* Import Drug Data Form */}
             {!showResults && (
               <div className="mt-8 pt-4 border-t border-gray-200">
                 <h3 className="text-lg font-semibold mb-4" dir={language.direction}>
