@@ -10,6 +10,13 @@ export const importDrugsFromCSV = (
   onSuccess: (updatedDrugs: Drug[]) => void, 
   onError: (error: string) => void
 ) => {
+  // Check if file is valid
+  if (!file || file.type !== 'text/csv') {
+    onError('Please upload a valid CSV file.');
+    return;
+  }
+
+  // Parse the CSV file using PapaParse
   Papa.parse(file, {
     header: true,
     skipEmptyLines: true,
@@ -22,6 +29,12 @@ export const importDrugsFromCSV = (
         }
         
         console.log("CSV import data:", results.data);
+        
+        // Check if we have valid data
+        if (!results.data || results.data.length === 0) {
+          onError('The CSV file does not contain any valid data.');
+          return;
+        }
         
         // Process the data to conform to our Drug/Alternative interface
         const processedData = processDrugData(results.data);
