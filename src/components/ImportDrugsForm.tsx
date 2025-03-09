@@ -4,7 +4,7 @@ import { LanguageContext } from '@/App';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { importDrugsFromCSV } from '@/utils/importDrugs';
+import { importDrugsFromFile } from '@/utils/importDrugs';
 import { getAllDrugs } from '@/services/drugService';
 import { Drug } from '@/types';
 import { AlertCircle } from 'lucide-react';
@@ -15,53 +15,66 @@ interface ImportDrugsFormProps {
 
 const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) => {
   const { language } = useContext(LanguageContext);
-  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [file, setFile] = useState<File | null>(null);
   const { toast } = useToast();
   const [isImporting, setIsImporting] = useState(false);
 
   const translations = {
-    selectFile: language.code === 'ar' ? 'اختر ملف CSV' : 'Select CSV File',
+    selectFile: language.code === 'ar' ? 'اختر ملف CSV أو Excel' : 'Select CSV or Excel File',
     import: language.code === 'ar' ? 'استيراد' : 'Import',
     importing: language.code === 'ar' ? 'جاري الاستيراد...' : 'Importing...',
     importSuccess: language.code === 'ar' ? 'تم استيراد البيانات بنجاح' : 'Data imported successfully',
     importError: language.code === 'ar' ? 'حدث خطأ أثناء الاستيراد' : 'An error occurred during import',
-    noFileSelected: language.code === 'ar' ? 'الرجاء تحديد ملف CSV' : 'Please select a CSV file',
+    noFileSelected: language.code === 'ar' ? 'الرجاء تحديد ملف' : 'Please select a file',
     fileSelected: language.code === 'ar' ? 'تم اختيار الملف: ' : 'File selected: ',
-    invalidFileType: language.code === 'ar' ? 'نوع الملف غير صالح. الرجاء تحديد ملف CSV.' : 'Invalid file type. Please select a CSV file.',
-    csvFormatTitle: language.code === 'ar' ? 'تنسيق الملف المتوقع:' : 'Expected CSV format:',
+    invalidFileType: language.code === 'ar' ? 'نوع الملف غير صالح. الرجاء تحديد ملف CSV أو Excel.' : 'Invalid file type. Please select a CSV or Excel file.',
+    csvFormatTitle: language.code === 'ar' ? 'تنسيق الملف المتوقع:' : 'Expected file format:',
     csvFormat: language.code === 'ar' 
       ? 'يجب أن يحتوي الملف على عناوين الأعمدة التالية: trade_name، arabic_name، price، active، category، company، إلخ.'
       : 'File should contain columns: trade_name, arabic_name, price, active, category, company, etc.',
     importNote: language.code === 'ar'
-      ? 'ملاحظة: سيتم تحويل بيانات CSV تلقائيًا إلى نموذج الدواء المناسب.'
-      : 'Note: CSV data will be automatically mapped to the appropriate drug model.',
+      ? 'ملاحظة: سيتم تحويل بيانات الملف تلقائيًا إلى نموذج الدواء المناسب.'
+      : 'Note: File data will be automatically mapped to the appropriate drug model.',
+    supportedFormats: language.code === 'ar'
+      ? 'الصيغ المدعومة: CSV, XLSX, XLS'
+      : 'Supported formats: CSV, XLSX, XLS',
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) {
-      setCsvFile(null);
+      setFile(null);
       return;
     }
     
-    const file = files[0];
-    if (file.type !== 'text/csv') {
+    const selectedFile = files[0];
+    const fileType = selectedFile.type;
+    const fileName = selectedFile.name.toLowerCase();
+    
+    // Check if file type is valid (CSV or Excel)
+    if (
+      fileType === 'text/csv' || 
+      fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
+      fileType === 'application/vnd.ms-excel' ||
+      fileName.endsWith('.csv') ||
+      fileName.endsWith('.xlsx') ||
+      fileName.endsWith('.xls')
+    ) {
+      setFile(selectedFile);
+      console.log('File selected:', selectedFile.name);
+    } else {
       toast({
         title: translations.invalidFileType,
         variant: 'destructive',
       });
-      setCsvFile(null);
+      setFile(null);
       // Reset the input field
       event.target.value = '';
-      return;
     }
-    
-    setCsvFile(file);
-    console.log('File selected:', file.name);
   };
 
   const handleImport = async () => {
-    if (!csvFile) {
+    if (!file) {
       toast({
         title: translations.noFileSelected,
         variant: 'destructive',
@@ -75,9 +88,9 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
       // Fetch the existing drugs 
       const existingDrugs = getAllDrugs();
       
-      // Call importDrugsFromCSV with all required arguments
-      importDrugsFromCSV(
-        csvFile,
+      // Call importDrugsFromFile with all required arguments
+      importDrugsFromFile(
+        file,
         existingDrugs,
         (updatedDrugs) => {
           onImportSuccess(updatedDrugs);
@@ -86,7 +99,7 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
           });
           setIsImporting(false);
           // Reset the file input
-          setCsvFile(null);
+          setFile(null);
           const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
           if (fileInput) fileInput.value = '';
         },
@@ -119,23 +132,26 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
         <p className="text-xs text-amber-700 mb-2">
           {translations.csvFormat}
         </p>
-        <p className="text-xs text-amber-600">
+        <p className="text-xs text-amber-600 mb-1">
           {translations.importNote}
+        </p>
+        <p className="text-xs font-medium text-amber-700">
+          {translations.supportedFormats}
         </p>
       </div>
       
       <div className="space-y-2">
         <Input
           type="file"
-          accept=".csv"
+          accept=".csv,.xlsx,.xls"
           onChange={handleFileChange}
           className="w-full"
           aria-label={translations.selectFile}
         />
         
-        {csvFile && (
+        {file && (
           <div className="text-sm text-gray-600" dir={language.direction}>
-            {translations.fileSelected} {csvFile.name}
+            {translations.fileSelected} {file.name}
           </div>
         )}
       </div>
@@ -143,7 +159,7 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
       <Button 
         onClick={handleImport} 
         className="w-full" 
-        disabled={!csvFile || isImporting}
+        disabled={!file || isImporting}
       >
         {isImporting ? translations.importing : translations.import}
         {isImporting && (

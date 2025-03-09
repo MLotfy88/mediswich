@@ -1,22 +1,50 @@
 
 import Papa from 'papaparse';
+import * as XLSX from 'xlsx';
 import { Drug, Alternative } from '@/types';
 import { processDrugData, mergeDrugData } from './drugDataUtils';
 
-// Function to import drugs from CSV
-export const importDrugsFromCSV = (
+// Function to import drugs from CSV or XLSX
+export const importDrugsFromFile = (
   file: File, 
   existingDrugs: Drug[], 
   onSuccess: (updatedDrugs: Drug[]) => void, 
   onError: (error: string) => void
 ) => {
   // Check if file is valid
-  if (!file || file.type !== 'text/csv') {
-    onError('Please upload a valid CSV file.');
+  if (!file) {
+    onError('Please upload a valid file.');
     return;
   }
 
-  // Parse the CSV file using PapaParse
+  const fileType = file.type;
+  console.log("File type:", fileType);
+  
+  // Handle CSV files
+  if (fileType === 'text/csv') {
+    importCSV(file, existingDrugs, onSuccess, onError);
+  } 
+  // Handle Excel files (.xlsx, .xls)
+  else if (
+    fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
+    fileType === 'application/vnd.ms-excel' ||
+    file.name.endsWith('.xlsx') ||
+    file.name.endsWith('.xls')
+  ) {
+    importExcel(file, existingDrugs, onSuccess, onError);
+  } 
+  else {
+    onError('Unsupported file format. Please upload a CSV or Excel file (.xlsx, .xls).');
+  }
+};
+
+// Function to import CSV files
+const importCSV = (
+  file: File,
+  existingDrugs: Drug[],
+  onSuccess: (updatedDrugs: Drug[]) => void,
+  onError: (error: string) => void
+) => {
   Papa.parse(file, {
     header: true,
     skipEmptyLines: true,
@@ -37,7 +65,7 @@ export const importDrugsFromCSV = (
         }
         
         // Map the CSV data to our Drug interface
-        const mappedData = mapCsvToDrugModel(results.data);
+        const mappedData = mapDataToDrugModel(results.data);
         
         // Merge with existing drugs data
         const updatedDrugs = mergeDrugData(existingDrugs, mappedData);
@@ -56,16 +84,67 @@ export const importDrugsFromCSV = (
   });
 };
 
-// Function to map CSV data to our Drug model
-function mapCsvToDrugModel(csvData: any[]): Drug[] {
-  return csvData.map((item) => {
+// Function to import Excel files
+const importExcel = (
+  file: File,
+  existingDrugs: Drug[],
+  onSuccess: (updatedDrugs: Drug[]) => void,
+  onError: (error: string) => void
+) => {
+  const reader = new FileReader();
+  
+  reader.onload = (e) => {
+    try {
+      const data = e.target?.result;
+      if (!data) {
+        onError('Failed to read Excel file.');
+        return;
+      }
+      
+      const workbook = XLSX.read(data, { type: 'binary' });
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      
+      // Convert to JSON
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      console.log("Excel import data:", jsonData);
+      
+      if (!jsonData || jsonData.length === 0) {
+        onError('The Excel file does not contain any valid data.');
+        return;
+      }
+      
+      // Map the Excel data to our Drug interface
+      const mappedData = mapDataToDrugModel(jsonData);
+      
+      // Merge with existing drugs data
+      const updatedDrugs = mergeDrugData(existingDrugs, mappedData);
+      
+      // Call the success callback with the updated drug list
+      onSuccess(updatedDrugs);
+    } catch (error) {
+      console.error("Error processing Excel data:", error);
+      onError(`Error processing Excel data: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
+  
+  reader.onerror = () => {
+    onError('Error reading Excel file.');
+  };
+  
+  reader.readAsBinaryString(file);
+};
+
+// Function to map data to Drug model
+function mapDataToDrugModel(data: any[]): Drug[] {
+  return data.map((item) => {
     // Generate a unique ID
     const id = `drug-${Math.random().toString(36).substring(2, 9)}`;
     
-    // Map CSV fields to Drug fields
+    // Map fields to Drug fields
     const drug: Drug = {
       id,
-      name: item.trade_name || item.name || '',
+      name: item.trade_name || item.arabic_name || item.name || '',
       nameEn: item.english_name || item.nameEn || item.trade_name || '',
       company: item.company || '',
       price: parseFloat(item.price || item.old_price || '0') || 0,
@@ -84,10 +163,6 @@ function mapCsvToDrugModel(csvData: any[]): Drug[] {
       drug.name = item.arabic_name;
       drug.nameEn = item.trade_name || '';
     }
-    
-    // If there's a category_ar field and our interface supports it
-    // (would need to extend the Drug interface)
-    // drug.categoryAr = item.category_ar || item.main_category_ar || '';
     
     return drug;
   });
@@ -120,3 +195,6 @@ export const parseAlternativesFromCSV = (
     };
   });
 };
+
+// For backward compatibility
+export const importDrugsFromCSV = importDrugsFromFile;
