@@ -36,11 +36,11 @@ export const importDrugsFromCSV = (
           return;
         }
         
-        // Process the data to conform to our Drug/Alternative interface
-        const processedData = processDrugData(results.data);
+        // Map the CSV data to our Drug interface
+        const mappedData = mapCsvToDrugModel(results.data);
         
         // Merge with existing drugs data
-        const updatedDrugs = mergeDrugData(existingDrugs, processedData);
+        const updatedDrugs = mergeDrugData(existingDrugs, mappedData);
         
         // Call the success callback with the updated drug list
         onSuccess(updatedDrugs);
@@ -55,6 +55,43 @@ export const importDrugsFromCSV = (
     }
   });
 };
+
+// Function to map CSV data to our Drug model
+function mapCsvToDrugModel(csvData: any[]): Drug[] {
+  return csvData.map((item) => {
+    // Generate a unique ID
+    const id = `drug-${Math.random().toString(36).substring(2, 9)}`;
+    
+    // Map CSV fields to Drug fields
+    const drug: Drug = {
+      id,
+      name: item.trade_name || item.name || '',
+      nameEn: item.english_name || item.nameEn || item.trade_name || '',
+      company: item.company || '',
+      price: parseFloat(item.price || item.old_price || '0') || 0,
+      country: item.country || 'Egypt',
+      isEgyptian: true, // Default to true for imported data
+      isAvailable: item.active === undefined ? true : item.active === 'yes' || item.active === 'true' || item.active === '1',
+      activeIngredient: item.active_ingredient || item.activeIngredient || item.active || '',
+      activeIngredientEn: item.active_ingredient_en || item.activeIngredientEn || '',
+      drugType: item.category || item.main_category || item.dosage_form || item.drugType || '',
+      manufacturer: item.company || item.manufacturer || '',
+      alternatives: [], // Initially empty, will be populated if needed
+    };
+    
+    // Optional: Map Arabic fields if available
+    if (item.arabic_name) {
+      drug.name = item.arabic_name;
+      drug.nameEn = item.trade_name || '';
+    }
+    
+    // If there's a category_ar field and our interface supports it
+    // (would need to extend the Drug interface)
+    // drug.categoryAr = item.category_ar || item.main_category_ar || '';
+    
+    return drug;
+  });
+}
 
 // Helper function to parse alternative drugs from CSV
 export const parseAlternativesFromCSV = (

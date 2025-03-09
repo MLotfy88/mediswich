@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { importDrugsFromCSV } from '@/utils/importDrugs';
 import { getAllDrugs } from '@/services/drugService';
 import { Drug } from '@/types';
+import { AlertCircle } from 'lucide-react';
 
 interface ImportDrugsFormProps {
   onImportSuccess: (updatedDrugs: Drug[]) => void;
@@ -27,9 +28,13 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
     noFileSelected: language.code === 'ar' ? 'الرجاء تحديد ملف CSV' : 'Please select a CSV file',
     fileSelected: language.code === 'ar' ? 'تم اختيار الملف: ' : 'File selected: ',
     invalidFileType: language.code === 'ar' ? 'نوع الملف غير صالح. الرجاء تحديد ملف CSV.' : 'Invalid file type. Please select a CSV file.',
+    csvFormatTitle: language.code === 'ar' ? 'تنسيق الملف المتوقع:' : 'Expected CSV format:',
     csvFormat: language.code === 'ar' 
-      ? 'صيغة الملف: اسم المنتج, الاسم بالإنجليزية, الشركة, السعر, البلد, المادة الفعالة, المادة الفعالة بالإنجليزية, نوع الدواء, الشركة المصنعة'
-      : 'Format: Product Name, English Name, Company, Price, Country, Active Ingredient, Active Ingredient (EN), Drug Type, Manufacturer',
+      ? 'يجب أن يحتوي الملف على عناوين الأعمدة التالية: trade_name، arabic_name، price، active، category، company، إلخ.'
+      : 'File should contain columns: trade_name, arabic_name, price, active, category, company, etc.',
+    importNote: language.code === 'ar'
+      ? 'ملاحظة: سيتم تحويل بيانات CSV تلقائيًا إلى نموذج الدواء المناسب.'
+      : 'Note: CSV data will be automatically mapped to the appropriate drug model.',
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,8 +112,16 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
 
   return (
     <div className="space-y-4">
-      <div className="text-sm text-gray-500 mb-2" dir={language.direction}>
-        {translations.csvFormat}
+      <div className="p-3 border border-amber-200 bg-amber-50 rounded-md" dir={language.direction}>
+        <h4 className="text-sm font-medium text-amber-800 mb-1">
+          {translations.csvFormatTitle}
+        </h4>
+        <p className="text-xs text-amber-700 mb-2">
+          {translations.csvFormat}
+        </p>
+        <p className="text-xs text-amber-600">
+          {translations.importNote}
+        </p>
       </div>
       
       <div className="space-y-2">
