@@ -37,7 +37,7 @@ export const importFromExcel = (
       }
       
       // Verify data structure - check if we have basic columns
-      const sampleRow = jsonData[0];
+      const sampleRow = jsonData[0] as Record<string, string>;
       console.log("Sample row headers:", Object.keys(sampleRow));
       
       if (!sampleRow.trade_name && !sampleRow.arabic_name) {
@@ -45,7 +45,7 @@ export const importFromExcel = (
       }
       
       // Map the Excel data to our Drug interface
-      const mappedData = mapDataToDrugModel(jsonData);
+      const mappedData = mapDataToDrugModel(jsonData as Record<string, string>[]);
       console.log(`Mapped ${mappedData.length} drugs from Excel data`);
       
       // Merge with existing drugs data

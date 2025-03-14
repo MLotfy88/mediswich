@@ -32,7 +32,7 @@ export const importFromCSV = (
         }
         
         // Verify data structure - check if we have basic columns
-        const sampleRow = results.data[0];
+        const sampleRow = results.data[0] as Record<string, string>;
         console.log("Sample row headers:", Object.keys(sampleRow));
         
         if (!sampleRow.trade_name && !sampleRow.arabic_name) {
@@ -40,7 +40,7 @@ export const importFromCSV = (
         }
         
         // Map the CSV data to our Drug interface
-        const mappedData = mapDataToDrugModel(results.data);
+        const mappedData = mapDataToDrugModel(results.data as Record<string, string>[]);
         console.log(`Mapped ${mappedData.length} drugs from CSV data`);
         
         // Merge with existing drugs data

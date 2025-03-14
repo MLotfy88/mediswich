@@ -2,7 +2,7 @@
 import { Drug, Alternative } from '@/types';
 
 // Function to map data to Drug model
-export function mapDataToDrugModel(data: any[]): Drug[] {
+export function mapDataToDrugModel(data: Record<string, string>[]): Drug[] {
   if (!data || data.length === 0) {
     console.warn('No data to map');
     return [];
