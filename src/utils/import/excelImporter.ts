@@ -3,6 +3,7 @@ import * as XLSX from 'xlsx';
 import { Drug } from '@/types';
 import { mapDataToDrugModel } from './drugDataMapper';
 import { mergeDrugData } from '../drugDataUtils';
+import { saveDrugs } from '@/services/drugService';
 
 // Function to import Excel files
 export const importFromExcel = (
@@ -51,6 +52,9 @@ export const importFromExcel = (
       // Merge with existing drugs data
       const updatedDrugs = mergeDrugData(existingDrugs, mappedData);
       console.log(`Total drugs after merge: ${updatedDrugs.length}`);
+      
+      // Save the updated drug list to the database/storage
+      saveDrugs(updatedDrugs);
       
       // Call the success callback with the updated drug list
       onSuccess(updatedDrugs);
