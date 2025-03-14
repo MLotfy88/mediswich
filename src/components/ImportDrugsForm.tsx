@@ -30,8 +30,8 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
     invalidFileType: language.code === 'ar' ? 'نوع الملف غير صالح. الرجاء تحديد ملف CSV أو Excel.' : 'Invalid file type. Please select a CSV or Excel file.',
     csvFormatTitle: language.code === 'ar' ? 'تنسيق الملف المتوقع:' : 'Expected file format:',
     csvFormat: language.code === 'ar' 
-      ? 'يجب أن يحتوي الملف على عناوين الأعمدة التالية: trade_name، arabic_name، price، active، category، company، إلخ.'
-      : 'File should contain columns: trade_name, arabic_name, price, active, category, company, etc.',
+      ? 'يجب أن يحتوي الملف على عناوين الأعمدة التالية:'
+      : 'File should contain the following column headers:',
     importNote: language.code === 'ar'
       ? 'ملاحظة: سيتم تحويل بيانات الملف تلقائيًا إلى نموذج الدواء المناسب.'
       : 'Note: File data will be automatically mapped to the appropriate drug model.',
@@ -132,6 +132,9 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
         <p className="text-xs text-amber-700 mb-2">
           {translations.csvFormat}
         </p>
+        <div className="my-2 p-2 bg-amber-100 rounded text-xs font-mono overflow-x-auto whitespace-nowrap">
+          trade_name, arabic_name, old_price, price, active, main_category, main_category_ar, category, category_ar, company, dosage_form, dosage_form_ar, unit, usage, usage_ar, description, last_price_update
+        </div>
         <p className="text-xs text-amber-600 mb-1">
           {translations.importNote}
         </p>
