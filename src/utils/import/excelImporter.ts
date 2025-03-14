@@ -21,24 +21,36 @@ export const importFromExcel = (
         return;
       }
       
+      // Parse workbook
       const workbook = XLSX.read(data, { type: 'binary' });
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
       
-      // Convert to JSON
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
-      console.log("Excel import data:", jsonData);
+      // Convert to JSON with header: true option
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: false });
+      console.log("Excel import data (first 3 rows):", jsonData.slice(0, 3));
+      console.log(`Total rows in Excel: ${jsonData.length}`);
       
       if (!jsonData || jsonData.length === 0) {
         onError('The Excel file does not contain any valid data.');
         return;
       }
       
+      // Verify data structure - check if we have basic columns
+      const sampleRow = jsonData[0];
+      console.log("Sample row headers:", Object.keys(sampleRow));
+      
+      if (!sampleRow.trade_name && !sampleRow.arabic_name) {
+        console.warn("Warning: Excel data might not match expected format");
+      }
+      
       // Map the Excel data to our Drug interface
       const mappedData = mapDataToDrugModel(jsonData);
+      console.log(`Mapped ${mappedData.length} drugs from Excel data`);
       
       // Merge with existing drugs data
       const updatedDrugs = mergeDrugData(existingDrugs, mappedData);
+      console.log(`Total drugs after merge: ${updatedDrugs.length}`);
       
       // Call the success callback with the updated drug list
       onSuccess(updatedDrugs);

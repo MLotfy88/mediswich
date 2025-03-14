@@ -22,7 +22,8 @@ export const importFromCSV = (
           return;
         }
         
-        console.log("CSV import data:", results.data);
+        console.log("CSV import data (first 3 rows):", results.data.slice(0, 3));
+        console.log(`Total rows in CSV: ${results.data.length}`);
         
         // Check if we have valid data
         if (!results.data || results.data.length === 0) {
@@ -30,11 +31,21 @@ export const importFromCSV = (
           return;
         }
         
+        // Verify data structure - check if we have basic columns
+        const sampleRow = results.data[0];
+        console.log("Sample row headers:", Object.keys(sampleRow));
+        
+        if (!sampleRow.trade_name && !sampleRow.arabic_name) {
+          console.warn("Warning: CSV data might not match expected format");
+        }
+        
         // Map the CSV data to our Drug interface
         const mappedData = mapDataToDrugModel(results.data);
+        console.log(`Mapped ${mappedData.length} drugs from CSV data`);
         
         // Merge with existing drugs data
         const updatedDrugs = mergeDrugData(existingDrugs, mappedData);
+        console.log(`Total drugs after merge: ${updatedDrugs.length}`);
         
         // Call the success callback with the updated drug list
         onSuccess(updatedDrugs);

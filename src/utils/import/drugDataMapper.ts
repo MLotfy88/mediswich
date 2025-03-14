@@ -3,9 +3,21 @@ import { Drug, Alternative } from '@/types';
 
 // Function to map data to Drug model
 export function mapDataToDrugModel(data: any[]): Drug[] {
+  if (!data || data.length === 0) {
+    console.warn('No data to map');
+    return [];
+  }
+  
+  console.log('Mapping data:', data);
+  
   return data.map((item) => {
     // Generate a unique ID
     const id = `drug-${Math.random().toString(36).substring(2, 9)}`;
+    
+    // Check if we have the necessary data
+    if (!item.trade_name && !item.arabic_name) {
+      console.warn('Missing essential drug data (name):', item);
+    }
     
     // Explicitly map the expected columns to our Drug model
     const drug: Drug = {
@@ -23,6 +35,9 @@ export function mapDataToDrugModel(data: any[]): Drug[] {
       manufacturer: item.company || '',
       alternatives: [], // Initially empty, will be populated if needed
     };
+    
+    // Log processed drug for debugging
+    console.log(`Processed drug: ${drug.name} (${drug.nameEn}), active: ${drug.activeIngredient}, price: ${drug.price}`);
     
     // Process additional fields if available
     if (item.description) {

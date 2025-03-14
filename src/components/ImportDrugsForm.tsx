@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { importDrugsFromFile } from '@/utils/importDrugs';
 import { getAllDrugs } from '@/services/drugService';
 import { Drug } from '@/types';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle } from 'lucide-react';
 
 interface ImportDrugsFormProps {
   onImportSuccess: (updatedDrugs: Drug[]) => void;
@@ -18,12 +18,14 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
   const [file, setFile] = useState<File | null>(null);
   const { toast } = useToast();
   const [isImporting, setIsImporting] = useState(false);
+  const [importedCount, setImportedCount] = useState<number | null>(null);
 
   const translations = {
     selectFile: language.code === 'ar' ? 'اختر ملف CSV أو Excel' : 'Select CSV or Excel File',
     import: language.code === 'ar' ? 'استيراد' : 'Import',
     importing: language.code === 'ar' ? 'جاري الاستيراد...' : 'Importing...',
     importSuccess: language.code === 'ar' ? 'تم استيراد البيانات بنجاح' : 'Data imported successfully',
+    drugsImported: language.code === 'ar' ? 'تم استيراد {count} من الأدوية بنجاح' : '{count} drugs imported successfully',
     importError: language.code === 'ar' ? 'حدث خطأ أثناء الاستيراد' : 'An error occurred during import',
     noFileSelected: language.code === 'ar' ? 'الرجاء تحديد ملف' : 'Please select a file',
     fileSelected: language.code === 'ar' ? 'تم اختيار الملف: ' : 'File selected: ',
@@ -62,6 +64,11 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
     ) {
       setFile(selectedFile);
       console.log('File selected:', selectedFile.name);
+      
+      toast({
+        title: translations.fileSelected + selectedFile.name,
+        description: fileType || fileName,
+      });
     } else {
       toast({
         title: translations.invalidFileType,
@@ -83,20 +90,30 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
     }
 
     setIsImporting(true);
+    setImportedCount(null);
 
     try {
       // Fetch the existing drugs 
       const existingDrugs = getAllDrugs();
+      console.log(`Starting import with ${existingDrugs.length} existing drugs`);
       
       // Call importDrugsFromFile with all required arguments
       importDrugsFromFile(
         file,
         existingDrugs,
         (updatedDrugs) => {
+          const importedDrugsCount = updatedDrugs.length - existingDrugs.length;
+          setImportedCount(importedDrugsCount);
+          
           onImportSuccess(updatedDrugs);
+          
+          // Show success message with count
           toast({
             title: translations.importSuccess,
+            description: translations.drugsImported.replace('{count}', importedDrugsCount.toString()),
+            variant: 'default',
           });
+          
           setIsImporting(false);
           // Reset the file input
           setFile(null);
@@ -153,8 +170,16 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
         />
         
         {file && (
-          <div className="text-sm text-gray-600" dir={language.direction}>
+          <div className="text-sm text-gray-600 flex items-center gap-1" dir={language.direction}>
+            <CheckCircle className="h-4 w-4 text-green-500" />
             {translations.fileSelected} {file.name}
+          </div>
+        )}
+        
+        {importedCount !== null && !isImporting && (
+          <div className="text-sm text-green-600 flex items-center gap-1 mt-2" dir={language.direction}>
+            <CheckCircle className="h-4 w-4" />
+            {translations.drugsImported.replace('{count}', importedCount.toString())}
           </div>
         )}
       </div>
