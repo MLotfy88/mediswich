@@ -1,7 +1,7 @@
 
 export const getImportTranslations = (languageCode: string, direction: string) => {
   return {
-    selectFile: languageCode === 'ar' ? 'اختر ملف CSV أو Excel' : 'Select CSV or Excel File',
+    selectFile: languageCode === 'ar' ? 'اختر ملف' : 'Select File',
     import: languageCode === 'ar' ? 'استيراد' : 'Import',
     importing: languageCode === 'ar' ? 'جاري الاستيراد...' : 'Importing...',
     importSuccess: languageCode === 'ar' ? 'تم استيراد البيانات بنجاح' : 'Data imported successfully',
@@ -23,6 +23,9 @@ export const getImportTranslations = (languageCode: string, direction: string) =
     processing: languageCode === 'ar'
       ? 'جاري معالجة الملف...'
       : 'Processing file...',
+    dragAndDropHint: languageCode === 'ar'
+      ? 'قم بسحب وإفلات الملف هنا أو انقر لاختيار ملف'
+      : 'Drag and drop a file here, or click to select',
     direction
   };
 };

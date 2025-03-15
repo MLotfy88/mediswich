@@ -16,6 +16,12 @@ export const importFromExcel = (
   console.log("Starting Excel import process...");
   const reader = new FileReader();
   
+  // Check if file is empty
+  if (file.size === 0) {
+    onError('الملف فارغ. الرجاء تحديد ملف صالح.');
+    return;
+  }
+  
   // Update progress
   if (onProgress) onProgress(10);
   
@@ -26,33 +32,74 @@ export const importFromExcel = (
       
       const data = e.target?.result;
       if (!data) {
-        onError('Failed to read Excel file.');
+        onError('فشل في قراءة ملف Excel.');
         return;
       }
       
       console.log("Excel file read successfully, parsing workbook...");
       
-      // Parse workbook
-      const workbook = XLSX.read(data, { type: 'binary' });
+      let workbook;
+      try {
+        // Parse workbook
+        workbook = XLSX.read(data, { type: 'binary' });
+      } catch (error) {
+        console.error("Error parsing Excel workbook:", error);
+        onError(`خطأ في تحليل ملف Excel: ${error instanceof Error ? error.message : String(error)}`);
+        return;
+      }
+      
+      if (!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
+        onError('ملف Excel لا يحتوي على أي صفحات.');
+        return;
+      }
+      
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
+      
+      if (!worksheet) {
+        onError(`لا يمكن العثور على صفحة "${firstSheetName}" في ملف Excel.`);
+        return;
+      }
       
       // Update progress
       if (onProgress) onProgress(50);
       
       // Convert to JSON with header: true option
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: false });
-      console.log("Excel import data (first 3 rows):", jsonData.slice(0, 3));
-      console.log(`Total rows in Excel: ${jsonData.length}`);
+      let jsonData;
+      try {
+        jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: false });
+      } catch (error) {
+        console.error("Error converting Excel to JSON:", error);
+        onError(`خطأ في تحويل بيانات Excel: ${error instanceof Error ? error.message : String(error)}`);
+        return;
+      }
       
-      if (!jsonData || jsonData.length === 0) {
-        onError('The Excel file does not contain any valid data.');
+      if (jsonData && jsonData.length > 0) {
+        console.log("Excel import data (first 3 rows):", jsonData.slice(0, 3));
+        console.log(`Total rows in Excel: ${jsonData.length}`);
+      } else {
+        onError('ملف Excel لا يحتوي على أي بيانات صالحة.');
         return;
       }
       
       // Verify data structure - check if we have basic columns
       const sampleRow = jsonData[0] as Record<string, string>;
-      console.log("Sample row headers:", Object.keys(sampleRow));
+      const headers = Object.keys(sampleRow);
+      console.log("Sample row headers:", headers);
+      
+      // Check for required fields
+      const requiredFields = ['trade_name', 'arabic_name', 'price'];
+      const missingFields = requiredFields.filter(field => 
+        !headers.some(h => 
+          h.toLowerCase().includes(field.toLowerCase()) || 
+          h.toLowerCase().replace(/_/g, '').includes(field.toLowerCase().replace(/_/g, ''))
+        )
+      );
+      
+      if (missingFields.length > 0) {
+        onError(`حقول مطلوبة مفقودة: ${missingFields.join(', ')}`);
+        return;
+      }
       
       // Update progress
       if (onProgress) onProgress(70);
@@ -61,6 +108,11 @@ export const importFromExcel = (
       console.log("Starting data mapping...");
       const mappedData = mapDataToDrugModel(jsonData as Record<string, string>[]);
       console.log(`Mapped ${mappedData.length} drugs from Excel data`);
+      
+      if (mappedData.length === 0) {
+        onError('لم يتم العثور على أي بيانات صالحة للأدوية في الملف.');
+        return;
+      }
       
       // Update progress
       if (onProgress) onProgress(80);
@@ -85,14 +137,15 @@ export const importFromExcel = (
       onSuccess(updatedDrugs);
     } catch (error) {
       console.error("Error processing Excel data:", error);
-      onError(`Error processing Excel data: ${error instanceof Error ? error.message : String(error)}`);
+      onError(`خطأ في معالجة بيانات Excel: ${error instanceof Error ? error.message : String(error)}`);
       // Reset progress on error
       if (onProgress) onProgress(0);
     }
   };
   
-  reader.onerror = () => {
-    onError('Error reading Excel file.');
+  reader.onerror = (error) => {
+    console.error("FileReader error:", error);
+    onError('خطأ في قراءة ملف Excel.');
     // Reset progress on error
     if (onProgress) onProgress(0);
   };

@@ -1,5 +1,5 @@
 
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { LanguageContext } from '@/App';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -22,10 +22,25 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
   const [isImporting, setIsImporting] = useState(false);
   const [importProgress, setImportProgress] = useState<number>(0);
   const [importedCount, setImportedCount] = useState<number | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
 
   const translations = getImportTranslations(language.code, language.direction);
 
+  // Reset error when file changes
+  useEffect(() => {
+    if (file) {
+      setFileError(null);
+      setImportError(null);
+    }
+  }, [file]);
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setImportProgress(0);
+    setImportedCount(null);
+    setImportError(null);
+    setFileError(null);
+
     const files = event.target.files;
     if (!files || files.length === 0) {
       setFile(null);
@@ -53,8 +68,10 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
         description: fileType || fileName,
       });
     } else {
+      const errorMsg = translations.invalidFileType;
+      setFileError(errorMsg);
       toast({
-        title: translations.invalidFileType,
+        title: errorMsg,
         variant: 'destructive',
       });
       setFile(null);
@@ -65,8 +82,10 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
 
   const handleImport = async () => {
     if (!file) {
+      const errorMsg = translations.noFileSelected;
+      setFileError(errorMsg);
       toast({
-        title: translations.noFileSelected,
+        title: errorMsg,
         variant: 'destructive',
       });
       return;
@@ -75,6 +94,8 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
     setIsImporting(true);
     setImportProgress(0);
     setImportedCount(null);
+    setImportError(null);
+    setFileError(null);
 
     // Show initial toast for processing
     toast({
@@ -114,6 +135,7 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
         },
         (error) => {
           console.error('Import error:', error);
+          setImportError(error);
           toast({
             title: translations.importError,
             description: error,
@@ -128,9 +150,12 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
         }
       );
     } catch (error) {
-      console.error('Import error:', error);
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error('Import error:', errorMsg);
+      setImportError(errorMsg);
       toast({
         title: translations.importError,
+        description: errorMsg,
         variant: 'destructive',
       });
       setIsImporting(false);
@@ -151,12 +176,14 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
         isDisabled={isImporting}
         translations={translations}
         language={language}
+        error={fileError}
       />
       
       <ProgressBar
         progress={importProgress}
         importedCount={importedCount}
         isImporting={isImporting}
+        error={importError}
         translations={translations}
         language={language}
       />
