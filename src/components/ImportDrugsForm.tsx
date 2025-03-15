@@ -1,5 +1,4 @@
-
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { LanguageContext } from '@/App';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,7 +31,7 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
     fileSelected: language.code === 'ar' ? 'تم اختيار الملف: ' : 'File selected: ',
     invalidFileType: language.code === 'ar' ? 'نوع الملف غير صالح. الرجاء تحديد ملف CSV أو Excel.' : 'Invalid file type. Please select a CSV or Excel file.',
     csvFormatTitle: language.code === 'ar' ? 'تنسيق الملف المتوقع:' : 'Expected file format:',
-    csvFormat: language.code === 'ar' 
+    csvFormat: language.code === 'ar'
       ? 'يجب أن يحتوي الملف على عناوين الأعمدة التالية:'
       : 'File should contain the following column headers:',
     importNote: language.code === 'ar'
@@ -52,15 +51,15 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
       setFile(null);
       return;
     }
-    
+
     const selectedFile = files[0];
     const fileType = selectedFile.type;
     const fileName = selectedFile.name.toLowerCase();
-    
+
     // Check if file type is valid (CSV or Excel)
     if (
-      fileType === 'text/csv' || 
-      fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
+      fileType === 'text/csv' ||
+      fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
       fileType === 'application/vnd.ms-excel' ||
       fileName.endsWith('.csv') ||
       fileName.endsWith('.xlsx') ||
@@ -68,7 +67,7 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
     ) {
       setFile(selectedFile);
       console.log('File selected:', selectedFile.name);
-      
+
       toast({
         title: translations.fileSelected + selectedFile.name,
         description: fileType || fileName,
@@ -104,42 +103,29 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
     });
 
     try {
-      // Fetch the existing drugs 
+      // Fetch the existing drugs
       const existingDrugs = getAllDrugs();
       console.log(`Starting import with ${existingDrugs.length} existing drugs`);
-      
-      // Simulate progress updates
-      const progressInterval = setInterval(() => {
-        setImportProgress(prev => {
-          const newProgress = prev + 5;
-          if (newProgress >= 90) {
-            clearInterval(progressInterval);
-            return 90; // Cap at 90% until complete
-          }
-          return newProgress;
-        });
-      }, 500);
-      
-      // Call importDrugsFromFile with all required arguments
+
+      // Call importDrugsFromFile with all required arguments and progress callback
       importDrugsFromFile(
         file,
         existingDrugs,
         (updatedDrugs) => {
-          clearInterval(progressInterval);
           setImportProgress(100);
-          
+
           const importedDrugsCount = updatedDrugs.length - existingDrugs.length;
           setImportedCount(importedDrugsCount);
-          
+
           onImportSuccess(updatedDrugs);
-          
+
           // Show success message with count
           toast({
             title: translations.importSuccess,
             description: translations.drugsImported.replace('{count}', importedDrugsCount.toString()),
             variant: 'default',
           });
-          
+
           setIsImporting(false);
           // Reset the file input
           setFile(null);
@@ -147,7 +133,6 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
           if (fileInput) fileInput.value = '';
         },
         (error) => {
-          clearInterval(progressInterval);
           console.error('Import error:', error);
           toast({
             title: translations.importError,
@@ -156,6 +141,10 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
           });
           setIsImporting(false);
           setImportProgress(0);
+        },
+        // Progress callback
+        (progress) => {
+          setImportProgress(progress);
         }
       );
     } catch (error) {

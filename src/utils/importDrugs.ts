@@ -10,7 +10,8 @@ export const importDrugsFromFile = (
   file: File, 
   existingDrugs: Drug[], 
   onSuccess: (updatedDrugs: Drug[]) => void, 
-  onError: (error: string) => void
+  onError: (error: string) => void,
+  onProgress?: (progress: number) => void
 ) => {
   // Check if file is valid
   if (!file) {
@@ -29,13 +30,16 @@ export const importDrugsFromFile = (
     return;
   }
   
+  // Update progress to indicate we're starting
+  if (onProgress) onProgress(5);
+  
   try {
     console.log("Starting import process with", existingDrugs.length, "existing drugs");
     
     // Handle CSV files
     if (fileType === 'text/csv' || fileName.endsWith('.csv')) {
       console.log("Processing as CSV file");
-      importFromCSV(file, existingDrugs, onSuccess, onError);
+      importFromCSV(file, existingDrugs, onSuccess, onError, onProgress);
     } 
     // Handle Excel files (.xlsx, .xls)
     else if (
@@ -45,7 +49,7 @@ export const importDrugsFromFile = (
       fileName.endsWith('.xls')
     ) {
       console.log("Processing as Excel file");
-      importFromExcel(file, existingDrugs, onSuccess, onError);
+      importFromExcel(file, existingDrugs, onSuccess, onError, onProgress);
     } 
     else {
       onError('Unsupported file format. Please upload a CSV or Excel file (.xlsx, .xls).');
@@ -53,6 +57,8 @@ export const importDrugsFromFile = (
   } catch (error) {
     console.error("Error during import:", error);
     onError(`Import error: ${error instanceof Error ? error.message : String(error)}`);
+    // Update progress to indicate error
+    if (onProgress) onProgress(0);
   }
 };
 

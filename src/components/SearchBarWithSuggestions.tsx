@@ -60,7 +60,7 @@ const SearchBarWithSuggestions: React.FC<SearchBarWithSuggestionsProps> = ({
     // Automatically trigger search with the new query after a short delay
     // to ensure the UI updates first
     setTimeout(() => {
-      console.log("Triggering search with suggestion:", suggestion.name);
+      console.log("Triggering search with suggestion:", newQuery.term);
       onSearch(newQuery);
       setIsSelectingSuggestion(false);
     }, 100);
