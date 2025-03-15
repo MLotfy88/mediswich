@@ -39,15 +39,6 @@ export function mapDataToDrugModel(data: Record<string, string>[]): Drug[] {
     // Log processed drug for debugging
     console.log(`Processed drug: ${drug.name} (${drug.nameEn}), active: ${drug.activeIngredient}, price: ${drug.price}`);
     
-    // Process additional fields if available
-    if (item.description) {
-      console.log(`Processing drug with description: ${item.description}`);
-    }
-    
-    if (item.usage || item.usage_ar) {
-      console.log(`Drug ${drug.name} has usage information`);
-    }
-    
     return drug;
   });
 }

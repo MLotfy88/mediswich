@@ -36,10 +36,6 @@ export const importFromCSV = (
         const sampleRow = results.data[0] as Record<string, string>;
         console.log("Sample row headers:", Object.keys(sampleRow));
         
-        if (!sampleRow.trade_name && !sampleRow.arabic_name) {
-          console.warn("Warning: CSV data might not match expected format");
-        }
-        
         // Map the CSV data to our Drug interface
         const mappedData = mapDataToDrugModel(results.data as Record<string, string>[]);
         console.log(`Mapped ${mappedData.length} drugs from CSV data`);

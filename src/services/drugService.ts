@@ -2,7 +2,6 @@
 import { Drug } from "@/types";
 import { drugsData } from "./data/mockDrugs";
 import { calculateSavings } from "./calculationService";
-import { searchDrugs, getDrugSuggestions } from "./drugSearchService";
 import { filterDrugs } from "./drugFilterService";
 
 // Local variable to store drugs data
@@ -10,6 +9,7 @@ let drugsDatabase = [...drugsData];
 
 // Function to get all drugs 
 export const getAllDrugs = (): Drug[] => {
+  console.log(`Returning ${drugsDatabase.length} drugs from database`);
   return drugsDatabase;
 };
 
@@ -20,10 +20,52 @@ export const saveDrugs = (drugs: Drug[]): void => {
   console.log('Drugs saved successfully');
 };
 
-// Re-export all services for backward compatibility
-export {
-  calculateSavings,
-  searchDrugs,
-  getDrugSuggestions,
-  filterDrugs
+// Function to search drugs by name or active ingredient
+export const searchDrugs = (searchTerm: string): Drug[] => {
+  console.log(`Searching for "${searchTerm}" in ${drugsDatabase.length} drugs`);
+  const lowerSearchTerm = searchTerm.toLowerCase();
+  
+  return drugsDatabase.filter((drug) => {
+    const lowerName = drug.name.toLowerCase();
+    const lowerNameEn = drug.nameEn ? drug.nameEn.toLowerCase() : '';
+    const lowerActiveIngredient = drug.activeIngredient.toLowerCase();
+    const lowerActiveIngredientEn = drug.activeIngredientEn ? drug.activeIngredientEn.toLowerCase() : '';
+    
+    return (
+      lowerName.includes(lowerSearchTerm) ||
+      lowerNameEn.includes(lowerSearchTerm) ||
+      lowerActiveIngredient.includes(lowerSearchTerm) ||
+      lowerActiveIngredientEn.includes(lowerSearchTerm)
+    );
+  });
 };
+
+// Function to get drug suggestions for autocomplete
+export const getDrugSuggestions = (searchTerm: string, languageCode: 'ar' | 'en'): any[] => {
+  if (!searchTerm || searchTerm.trim().length < 2) return [];
+  
+  console.log(`Getting suggestions for "${searchTerm}" in ${languageCode} from ${drugsDatabase.length} drugs`);
+  const lowerSearchTerm = searchTerm.toLowerCase();
+  
+  return drugsDatabase
+    .filter(drug => {
+      const nameInCurrentLang = languageCode === 'ar' ? drug.name : (drug.nameEn || drug.name);
+      const nameInOtherLang = languageCode === 'ar' ? (drug.nameEn || '') : drug.name;
+      const activeIngredientInCurrentLang = languageCode === 'ar' ? drug.activeIngredient : (drug.activeIngredientEn || drug.activeIngredient);
+      
+      return nameInCurrentLang.toLowerCase().includes(lowerSearchTerm) || 
+             nameInOtherLang.toLowerCase().includes(lowerSearchTerm) ||
+             activeIngredientInCurrentLang.toLowerCase().includes(lowerSearchTerm);
+    })
+    .map(drug => ({
+      id: drug.id,
+      name: languageCode === 'ar' ? drug.name : (drug.nameEn || drug.name),
+      nameEn: drug.nameEn,
+      nameInOtherLanguage: languageCode === 'ar' ? drug.nameEn : drug.name,
+      activeIngredient: languageCode === 'ar' ? drug.activeIngredient : (drug.activeIngredientEn || drug.activeIngredient),
+      activeIngredientEn: languageCode === 'ar' ? (drug.activeIngredientEn || '') : drug.activeIngredient
+    }));
+};
+
+// Re-export calculationService for backward compatibility
+export { calculateSavings, filterDrugs };

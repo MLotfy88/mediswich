@@ -41,10 +41,6 @@ export const importFromExcel = (
       const sampleRow = jsonData[0] as Record<string, string>;
       console.log("Sample row headers:", Object.keys(sampleRow));
       
-      if (!sampleRow.trade_name && !sampleRow.arabic_name) {
-        console.warn("Warning: Excel data might not match expected format");
-      }
-      
       // Map the Excel data to our Drug interface
       const mappedData = mapDataToDrugModel(jsonData as Record<string, string>[]);
       console.log(`Mapped ${mappedData.length} drugs from Excel data`);

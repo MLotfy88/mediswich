@@ -1,8 +1,8 @@
 
 import { useState, useEffect, useRef, useContext } from 'react';
-import { Drug, DrugSuggestion } from '@/types';
+import { DrugSuggestion } from '@/types';
 import { LanguageContext } from '@/App';
-import { getDrugSuggestions, getAlternativeSuggestions } from '@/services/drugSearchService';
+import { getDrugSuggestions } from '@/services/drugService';
 
 interface SearchSuggestionsProps {
   searchTerm: string;
@@ -31,56 +31,20 @@ const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({
       return;
     }
 
-    // Use an async function inside useEffect to properly handle the Promise
-    const fetchSuggestions = () => {
-      try {
-        // If we're searching for alternatives to a specific drug
-        if (alternativesFor) {
-          const altSuggestions = getAlternativeSuggestions(
-            alternativesFor, 
-            searchTerm, 
-            language.code
-          );
-          
-          // Make sure the suggestions match the DrugSuggestion interface
-          const formattedSuggestions: DrugSuggestion[] = altSuggestions.map(s => ({
-            id: s.id,
-            name: s.name,
-            nameEn: s.nameEn,
-            nameInOtherLanguage: s.nameInOtherLanguage,
-            activeIngredient: s.activeIngredient || '',
-            activeIngredientEn: s.activeIngredientEn || ''
-          }));
-          
-          setSuggestions(formattedSuggestions);
-          setIsVisible(formattedSuggestions.length > 0);
-        } else {
-          // Normal drug search
-          const drugSuggestions = getDrugSuggestions(searchTerm, language.code);
-          
-          // Make sure the suggestions match the DrugSuggestion interface
-          const formattedSuggestions: DrugSuggestion[] = drugSuggestions.map(s => ({
-            id: s.id,
-            name: s.name,
-            nameEn: s.nameEn,
-            nameInOtherLanguage: s.nameInOtherLanguage,
-            activeIngredient: s.activeIngredient || '',
-            activeIngredientEn: s.activeIngredientEn || ''
-          }));
-          
-          setSuggestions(formattedSuggestions);
-          setIsVisible(formattedSuggestions.length > 0);
-        }
-      } catch (error) {
-        console.error("Error fetching suggestions:", error);
-        setSuggestions([]);
-        setIsVisible(false);
-      }
-    };
-
-    // Call the function
-    fetchSuggestions();
-  }, [searchTerm, alternativesFor, language.code]);
+    try {
+      // Get suggestions using the updated getDrugSuggestions function from drugService
+      console.log(`Fetching suggestions for "${searchTerm}" in ${language.code}`);
+      const fetchedSuggestions = getDrugSuggestions(searchTerm, language.code);
+      
+      setSuggestions(fetchedSuggestions);
+      setIsVisible(fetchedSuggestions.length > 0);
+      console.log(`Found ${fetchedSuggestions.length} suggestions`);
+    } catch (error) {
+      console.error("Error fetching suggestions:", error);
+      setSuggestions([]);
+      setIsVisible(false);
+    }
+  }, [searchTerm, language.code]);
 
   // Close suggestions when clicking outside
   useEffect(() => {
@@ -111,6 +75,7 @@ const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({
             key={suggestion.id}
             className="px-4 py-2 hover:bg-pharma-secondary/20 cursor-pointer"
             onClick={() => {
+              console.log("Suggestion clicked:", suggestion.name);
               onSuggestionClick(suggestion);
               setIsVisible(false);
             }}

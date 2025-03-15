@@ -46,7 +46,9 @@ const SearchSection: React.FC<SearchSectionProps> = ({
     
     setIsLoading(true);
     try {
+      console.log(`Searching for: "${query.term}"`);
       const results = searchDrugs(query.term);
+      console.log(`Found ${results.length} results for "${query.term}"`);
       setSearchResults(results);
       setShowResults(true);
     } catch (error) {
@@ -61,7 +63,10 @@ const SearchSection: React.FC<SearchSectionProps> = ({
   };
 
   const handleDrugDataImport = (updatedDrugs: Drug[]) => {
+    console.log(`Import callback received ${updatedDrugs.length} drugs`);
+    
     if (searchQuery.term.trim()) {
+      // Re-run search with current query to update results
       handleSearch(searchQuery);
     }
   };

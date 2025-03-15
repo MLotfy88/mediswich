@@ -41,17 +41,20 @@ const SearchBarWithSuggestions: React.FC<SearchBarWithSuggestionsProps> = ({
   };
 
   const handleSuggestionClick = (suggestion: DrugSuggestion) => {
-    setSearchQuery({
+    // Set the search term to the selected suggestion's name
+    const newQuery = {
       ...searchQuery,
       term: suggestion.name
-    });
+    };
     
-    // Automatically trigger search when suggestion is clicked
-    onSearch({
-      ...searchQuery,
-      term: suggestion.name
-    });
+    // Update the search query state
+    setSearchQuery(newQuery);
     
+    // Automatically trigger search with the new query
+    console.log("Triggering search with suggestion:", suggestion.name);
+    onSearch(newQuery);
+    
+    // Hide suggestions
     setShowSuggestions(false);
   };
 
