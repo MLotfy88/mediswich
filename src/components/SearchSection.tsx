@@ -1,5 +1,5 @@
 
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { LanguageContext } from "@/App";
 import { Drug, SearchQuery, FilterOptions } from "@/types";
 import SearchResults from "./SearchResults";
@@ -31,6 +31,7 @@ const SearchSection: React.FC<SearchSectionProps> = ({
   const { language } = useContext(LanguageContext);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [totalDrugs, setTotalDrugs] = useState(0);
 
   const translations = {
     searchPlaceholder: language.code === 'ar' 
@@ -39,7 +40,14 @@ const SearchSection: React.FC<SearchSectionProps> = ({
     filters: language.code === 'ar' ? 'الفلاتر' : 'Filters',
     noResults: language.code === 'ar' ? 'لا توجد نتائج' : 'No results found',
     importData: language.code === 'ar' ? 'استيراد بيانات الأدوية' : 'Import Drug Data',
+    totalDrugs: language.code === 'ar' ? 'إجمالي الأدوية في قاعدة البيانات: {count}' : 'Total drugs in database: {count}',
   };
+
+  // Get total drugs count on component mount and when drugs are imported
+  useEffect(() => {
+    const drugs = getAllDrugs();
+    setTotalDrugs(drugs.length);
+  }, []);
 
   const handleSearch = async (query: SearchQuery) => {
     if (!query.term.trim()) return;
@@ -64,6 +72,7 @@ const SearchSection: React.FC<SearchSectionProps> = ({
 
   const handleDrugDataImport = (updatedDrugs: Drug[]) => {
     console.log(`Import callback received ${updatedDrugs.length} drugs`);
+    setTotalDrugs(updatedDrugs.length);
     
     if (searchQuery.term.trim()) {
       // Re-run search with current query to update results
@@ -133,9 +142,14 @@ const SearchSection: React.FC<SearchSectionProps> = ({
             
             {!showResults && (
               <div className="mt-8 pt-4 border-t border-gray-200">
-                <h3 className="text-lg font-semibold mb-4" dir={language.direction}>
-                  {translations.importData}
-                </h3>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold" dir={language.direction}>
+                    {translations.importData}
+                  </h3>
+                  <div className="text-sm text-gray-600" dir={language.direction}>
+                    {translations.totalDrugs.replace('{count}', totalDrugs.toString())}
+                  </div>
+                </div>
                 <ImportDrugsForm onImportSuccess={handleDrugDataImport} />
               </div>
             )}

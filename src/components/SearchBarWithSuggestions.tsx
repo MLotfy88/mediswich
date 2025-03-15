@@ -22,6 +22,7 @@ const SearchBarWithSuggestions: React.FC<SearchBarWithSuggestionsProps> = ({
 }) => {
   const { language } = useContext(LanguageContext);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isSelectingSuggestion, setIsSelectingSuggestion] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,21 +42,28 @@ const SearchBarWithSuggestions: React.FC<SearchBarWithSuggestionsProps> = ({
   };
 
   const handleSuggestionClick = (suggestion: DrugSuggestion) => {
+    console.log("Suggestion clicked:", suggestion);
+    setIsSelectingSuggestion(true);
+    
     // Set the search term to the selected suggestion's name
     const newQuery = {
       ...searchQuery,
-      term: suggestion.name
+      term: suggestion.name || ''
     };
     
     // Update the search query state
     setSearchQuery(newQuery);
     
-    // Automatically trigger search with the new query
-    console.log("Triggering search with suggestion:", suggestion.name);
-    onSearch(newQuery);
-    
-    // Hide suggestions
+    // Hide suggestions immediately
     setShowSuggestions(false);
+    
+    // Automatically trigger search with the new query after a short delay
+    // to ensure the UI updates first
+    setTimeout(() => {
+      console.log("Triggering search with suggestion:", suggestion.name);
+      onSearch(newQuery);
+      setIsSelectingSuggestion(false);
+    }, 100);
   };
 
   const clearSearch = () => {
@@ -119,7 +127,7 @@ const SearchBarWithSuggestions: React.FC<SearchBarWithSuggestionsProps> = ({
         </div>
       </form>
       
-      {showSuggestions && searchQuery.term.trim().length >= 2 && (
+      {showSuggestions && searchQuery.term.trim().length >= 2 && !isSelectingSuggestion && (
         <SearchSuggestions
           searchTerm={searchQuery.term}
           onSuggestionClick={handleSuggestionClick}

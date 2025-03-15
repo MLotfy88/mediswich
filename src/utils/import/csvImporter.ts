@@ -12,6 +12,8 @@ export const importFromCSV = (
   onSuccess: (updatedDrugs: Drug[]) => void,
   onError: (error: string) => void
 ) => {
+  console.log("Starting CSV import process...");
+  
   Papa.parse(file, {
     header: true,
     skipEmptyLines: true,
@@ -37,17 +39,21 @@ export const importFromCSV = (
         console.log("Sample row headers:", Object.keys(sampleRow));
         
         // Map the CSV data to our Drug interface
+        console.log("Starting data mapping...");
         const mappedData = mapDataToDrugModel(results.data as Record<string, string>[]);
         console.log(`Mapped ${mappedData.length} drugs from CSV data`);
         
         // Merge with existing drugs data
+        console.log("Merging with existing drug data...");
         const updatedDrugs = mergeDrugData(existingDrugs, mappedData);
         console.log(`Total drugs after merge: ${updatedDrugs.length}`);
         
         // Save the updated drug list to the database/storage
+        console.log("Saving updated drug list...");
         saveDrugs(updatedDrugs);
         
         // Call the success callback with the updated drug list
+        console.log("Import process completed successfully");
         onSuccess(updatedDrugs);
       } catch (error) {
         console.error("Error processing drug data:", error);

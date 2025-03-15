@@ -12,6 +12,7 @@ export const importFromExcel = (
   onSuccess: (updatedDrugs: Drug[]) => void,
   onError: (error: string) => void
 ) => {
+  console.log("Starting Excel import process...");
   const reader = new FileReader();
   
   reader.onload = (e) => {
@@ -21,6 +22,8 @@ export const importFromExcel = (
         onError('Failed to read Excel file.');
         return;
       }
+      
+      console.log("Excel file read successfully, parsing workbook...");
       
       // Parse workbook
       const workbook = XLSX.read(data, { type: 'binary' });
@@ -42,17 +45,21 @@ export const importFromExcel = (
       console.log("Sample row headers:", Object.keys(sampleRow));
       
       // Map the Excel data to our Drug interface
+      console.log("Starting data mapping...");
       const mappedData = mapDataToDrugModel(jsonData as Record<string, string>[]);
       console.log(`Mapped ${mappedData.length} drugs from Excel data`);
       
       // Merge with existing drugs data
+      console.log("Merging with existing drug data...");
       const updatedDrugs = mergeDrugData(existingDrugs, mappedData);
       console.log(`Total drugs after merge: ${updatedDrugs.length}`);
       
       // Save the updated drug list to the database/storage
+      console.log("Saving updated drug list...");
       saveDrugs(updatedDrugs);
       
       // Call the success callback with the updated drug list
+      console.log("Import process completed successfully");
       onSuccess(updatedDrugs);
     } catch (error) {
       console.error("Error processing Excel data:", error);
@@ -64,5 +71,6 @@ export const importFromExcel = (
     onError('Error reading Excel file.');
   };
   
+  console.log("Starting to read Excel file as binary string...");
   reader.readAsBinaryString(file);
 };

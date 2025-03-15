@@ -22,11 +22,19 @@ export const importDrugsFromFile = (
   const fileName = file.name.toLowerCase();
   console.log("File type:", fileType, "File name:", fileName);
   
+  // Validate file size (limit to 100MB)
+  const maxSize = 100 * 1024 * 1024; // 100MB
+  if (file.size > maxSize) {
+    onError(`File is too large. Maximum size is 100MB.`);
+    return;
+  }
+  
   try {
     console.log("Starting import process with", existingDrugs.length, "existing drugs");
     
     // Handle CSV files
     if (fileType === 'text/csv' || fileName.endsWith('.csv')) {
+      console.log("Processing as CSV file");
       importFromCSV(file, existingDrugs, onSuccess, onError);
     } 
     // Handle Excel files (.xlsx, .xls)
@@ -36,6 +44,7 @@ export const importDrugsFromFile = (
       fileName.endsWith('.xlsx') ||
       fileName.endsWith('.xls')
     ) {
+      console.log("Processing as Excel file");
       importFromExcel(file, existingDrugs, onSuccess, onError);
     } 
     else {

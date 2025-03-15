@@ -18,6 +18,7 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
   const [file, setFile] = useState<File | null>(null);
   const { toast } = useToast();
   const [isImporting, setIsImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState<number>(0);
   const [importedCount, setImportedCount] = useState<number | null>(null);
 
   const translations = {
@@ -40,6 +41,9 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
     supportedFormats: language.code === 'ar'
       ? 'الصيغ المدعومة: CSV, XLSX, XLS'
       : 'Supported formats: CSV, XLSX, XLS',
+    processing: language.code === 'ar'
+      ? 'جاري معالجة الملف...'
+      : 'Processing file...',
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,18 +94,40 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
     }
 
     setIsImporting(true);
+    setImportProgress(0);
     setImportedCount(null);
+
+    // Show initial toast for processing
+    toast({
+      title: translations.processing,
+      description: file.name,
+    });
 
     try {
       // Fetch the existing drugs 
       const existingDrugs = getAllDrugs();
       console.log(`Starting import with ${existingDrugs.length} existing drugs`);
       
+      // Simulate progress updates
+      const progressInterval = setInterval(() => {
+        setImportProgress(prev => {
+          const newProgress = prev + 5;
+          if (newProgress >= 90) {
+            clearInterval(progressInterval);
+            return 90; // Cap at 90% until complete
+          }
+          return newProgress;
+        });
+      }, 500);
+      
       // Call importDrugsFromFile with all required arguments
       importDrugsFromFile(
         file,
         existingDrugs,
         (updatedDrugs) => {
+          clearInterval(progressInterval);
+          setImportProgress(100);
+          
           const importedDrugsCount = updatedDrugs.length - existingDrugs.length;
           setImportedCount(importedDrugsCount);
           
@@ -121,6 +147,7 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
           if (fileInput) fileInput.value = '';
         },
         (error) => {
+          clearInterval(progressInterval);
           console.error('Import error:', error);
           toast({
             title: translations.importError,
@@ -128,6 +155,7 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
             variant: 'destructive',
           });
           setIsImporting(false);
+          setImportProgress(0);
         }
       );
     } catch (error) {
@@ -137,6 +165,7 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
         variant: 'destructive',
       });
       setIsImporting(false);
+      setImportProgress(0);
     }
   };
 
@@ -167,12 +196,22 @@ const ImportDrugsForm: React.FC<ImportDrugsFormProps> = ({ onImportSuccess }) =>
           onChange={handleFileChange}
           className="w-full"
           aria-label={translations.selectFile}
+          disabled={isImporting}
         />
         
         {file && (
           <div className="text-sm text-gray-600 flex items-center gap-1" dir={language.direction}>
             <CheckCircle className="h-4 w-4 text-green-500" />
             {translations.fileSelected} {file.name}
+          </div>
+        )}
+        
+        {isImporting && (
+          <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+            <div 
+              className="bg-pharma-primary h-2.5 rounded-full transition-all duration-300" 
+              style={{ width: `${importProgress}%` }}
+            ></div>
           </div>
         )}
         
